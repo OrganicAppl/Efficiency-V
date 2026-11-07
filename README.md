@@ -32,14 +32,16 @@ python -m pip install Flask requests python-dotenv
 
 ### Configure SolarBot (optional)
 
-Add your Gemini API key to the repository-root `.env` file:
+After cloning or downloading the repository, create a file named `.env` in the
+repository's root folder (the same folder as this README). Open the new file in Notepad and add your Gemini API key to the file, then save it:
 
 ```text
-GEMINI_API_KEY=your_api_key_here
+GEMINI_API_KEY=*your_api_key_here*
 ```
 
-Keep the key private. The `.env` file is listed in `.gitignore`. Gemini chat
-also requires available quota for the configured model and API project.
+Replace `your_api_key_here` with your actual key. Keep it private; do not share
+or commit it. The `.env` file is listed in `.gitignore` so it is not distributed in this repo. Gemini chat also
+requires available quota for the configured model and API project. It should be using Gemini 3.5 Flash.
 
 ### Run
 
