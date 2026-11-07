@@ -43,6 +43,51 @@ Replace `your_api_key_here` with your actual key. Keep it private; do not share
 or commit it. The `.env` file is listed in `.gitignore` so it is not distributed in this repo. Gemini chat also
 requires available quota for the configured model and API project. It should be using Gemini 3.5 Flash.
 
+### Configure account registration (Databricks)
+
+Login and account registration require a Databricks SQL warehouse. Add these
+settings to the same repository-root `.env` file:
+
+```text
+DATABRICKS_SERVER_HOSTNAME=your-workspace-hostname
+DATABRICKS_ACCESS_TOKEN=your-databricks-access-token
+DATABRICKS_WAREHOUSE_ID=your-sql-warehouse-id
+```
+
+The app also accepts `DATABRICKS_TOKEN` instead of
+`DATABRICKS_ACCESS_TOKEN`. The configured warehouse needs permission to select
+from and insert into `workspace.users.login`. Create that table in Databricks
+before registering the first account:
+
+```sql
+CREATE SCHEMA IF NOT EXISTS workspace.users;
+
+CREATE TABLE IF NOT EXISTS workspace.users.login (
+  uid INT NOT NULL,
+  username STRING,
+  salt STRING NOT NULL,
+  password_hash BINARY NOT NULL,
+  email STRING,
+  zip INT,
+  CONSTRAINT login_pk PRIMARY KEY (uid)
+);
+```
+
+If the table already exists without the `uid` column, add it before using
+registration:
+
+```sql
+ALTER TABLE workspace.users.login ADD COLUMNS (uid INT);
+```
+
+The app stores password digests as binary data and converts them to hex when
+checking logins. The `username` and `zip` fields are optional for the current
+registration form.
+
+If your Databricks catalog or schema has a different name, update the
+`LOGIN_QUERY` and `REGISTER_QUERY` table paths in `solar_web_app/app.py` to
+match it.
+
 ### Run
 
 From the repository folder:

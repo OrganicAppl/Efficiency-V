@@ -8,7 +8,7 @@ import time
 import urllib.request
 from datetime import datetime
 from functools import wraps
-from flask import Flask, render_template, request, jsonify, redirect, session, url_for
+from flask import Flask, render_template, request, jsonify, redirect, send_from_directory, session, url_for
 import re
 import requests
 from dotenv import load_dotenv
@@ -159,15 +159,22 @@ app.config.update(
     SESSION_COOKIE_SECURE=os.getenv("APP_ENV") == "production",
 )
 
+
+@app.route("/brand-logo")
+def brand_logo():
+    return send_from_directory(os.path.join(app.root_path, "imgs"), "square.jpeg")
+
+
 LOGIN_QUERY = """
-SELECT email, password_hash, salt
+SELECT email, hex(password_hash), salt
 FROM workspace.users.login
 WHERE lower(email) = lower(:email)
 LIMIT 2
 """
 REGISTER_QUERY = """
-INSERT INTO workspace.users.login (email, password_hash, salt)
-VALUES (:email, :password_hash, :salt)
+INSERT INTO workspace.users.login (uid, email, password_hash, salt)
+SELECT CAST(COALESCE(MAX(uid), 0) + 1 AS INT), :email, unhex(:password_hash), :salt
+FROM workspace.users.login
 """
 
 
@@ -183,9 +190,14 @@ def login_required(view):
     return wrapped_view
 
 
+@app.context_processor
+def inject_csrf_token():
+    return {"csrf_token": session.setdefault("csrf_token", secrets.token_urlsafe(32))}
+
+
 def execute_databricks_statement(statement_sql, parameters):
     hostname = os.getenv("DATABRICKS_SERVER_HOSTNAME")
-    token = os.getenv("DATABRICKS_TOKEN")
+    token = os.getenv("DATABRICKS_TOKEN") or os.getenv("DATABRICKS_ACCESS_TOKEN")
     warehouse_id = os.getenv("DATABRICKS_WAREHOUSE_ID")
     http_path = os.getenv("DATABRICKS_HTTP_PATH", "")
     if not warehouse_id:
@@ -194,8 +206,9 @@ def execute_databricks_statement(statement_sql, parameters):
             warehouse_id = warehouse_match.group(1)
     if not hostname or not token or not warehouse_id:
         raise RuntimeError(
-            "Set DATABRICKS_SERVER_HOSTNAME, DATABRICKS_TOKEN, and "
-            "DATABRICKS_WAREHOUSE_ID (or DATABRICKS_HTTP_PATH) to enable login."
+            "Set DATABRICKS_SERVER_HOSTNAME, DATABRICKS_TOKEN "
+            "(or DATABRICKS_ACCESS_TOKEN), and DATABRICKS_WAREHOUSE_ID "
+            "(or DATABRICKS_HTTP_PATH) to enable login."
         )
 
     hostname = hostname.removeprefix("https://").removeprefix("http://").rstrip("/")
@@ -272,13 +285,20 @@ def lookup_login(email):
         LOGIN_QUERY,
         [{"name": "email", "type": "STRING", "value": email}],
     )
-    rows = statement.get("result", {}).get("data_array")
-    if not isinstance(rows, list):
-        raise RuntimeError("Databricks returned no login query results.")
-    # Inside lookup_login (app.py)
-    if not rows:
-        return None  # Return None instead of raising an error when a user isn't found!
-    return rows
+    result = statement.get("result")
+    rows = result.get("data_array") if isinstance(result, dict) else None
+    if isinstance(rows, list):
+        return rows
+
+    manifest = statement.get("manifest")
+    if isinstance(manifest, dict) and manifest.get("total_row_count") == 0:
+        return []
+
+    response_keys = ", ".join(sorted(statement))
+    raise RuntimeError(
+        "Databricks login query response did not contain row data "
+        f"(response fields: {response_keys or 'none'})."
+    )
 
 
 def create_login(email, password):
@@ -292,6 +312,17 @@ def create_login(email, password):
             {"name": "salt", "type": "STRING", "value": salt},
         ],
     )
+
+
+def normalize_stored_password_hash(stored_hash):
+    stored_hash_bytes = bytes.fromhex(stored_hash)
+    if len(stored_hash_bytes) == 32:
+        return stored_hash.lower()
+    if len(stored_hash_bytes) == 64:
+        legacy_hash = stored_hash_bytes.decode("ascii").lower()
+        if len(bytes.fromhex(legacy_hash)) == 32:
+            return legacy_hash
+    raise ValueError("Unexpected password hash format.")
 
 
 @app.route("/api/chat", methods=["POST"])
@@ -447,23 +478,30 @@ def login():
         app.logger.error("Databricks login row has an unexpected value type")
         return jsonify({"success": False, "error": "Login is temporarily unavailable."}), 503
 
-    if len(stored_hash) != 64:
+    try:
+        expected_hash = normalize_stored_password_hash(stored_hash)
+    except (UnicodeDecodeError, ValueError):
         app.logger.error("Databricks login row has an invalid password hash")
         return jsonify({"success": False, "error": "Login is temporarily unavailable."}), 503
 
-    try:
-        bytes.fromhex(stored_hash)
-    except ValueError:
-        app.logger.error("Databricks login row has a non-hexadecimal password hash")
-        return jsonify({"success": False, "error": "Login is temporarily unavailable."}), 503
-
     candidate_hash = hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
-    if not hmac.compare_digest(candidate_hash, stored_hash.lower()):
+    if not hmac.compare_digest(candidate_hash, expected_hash):
         return jsonify({"success": False, "error": "Invalid email or password."}), 401
 
     session.clear()
     session["user_email"] = stored_email
     return jsonify({"success": True})
+
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    submitted_csrf = request.form.get("csrf_token", "")
+    expected_csrf = session.get("csrf_token", "")
+    if not expected_csrf or not hmac.compare_digest(submitted_csrf, expected_csrf):
+        return "Your session expired. Reload the page and try again.", 400
+
+    session.clear()
+    return redirect(url_for("login"))
 
 
 @app.route("/register", methods=["POST"])
@@ -487,7 +525,8 @@ def register():
         return jsonify({"success": False, "error": "The passwords do not match."}), 400
 
     try:
-        if lookup_login(email):
+        existing_users = lookup_login(email)
+        if existing_users:
             return jsonify({"success": False, "error": "An account with that email already exists."}), 409
         create_login(email, password)
     except Exception:

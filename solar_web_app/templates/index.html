@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SolarPeak AI - Home Energy Dispatcher</title>
+  <title>Silver Lining - Home Energy Dispatcher</title>
   <link rel="stylesheet" href="../static/style.css">
   
   <!-- Add Theme Script here to prevent flicker -->
@@ -16,8 +16,8 @@
   <!-- NAVBAR WITH NAVIGATION BUTTONS -->
   <header class="navbar">
     <div class="logo">
-      <span class="logo-icon">☀️</span>
-      <h2>SolarPeak <span class="tag">AI</span></h2>
+      <img class="brand-logo" src="{{ url_for('brand_logo') }}" alt="">
+      <h2>Silver Lining</h2>
     </div>
     
     <div class="nav-center">
@@ -27,6 +27,10 @@
     <nav class="nav-links">
       <a href="/" class="nav-btn active">📊 Dashboard</a>
       <a href="/settings" class="nav-btn">⚙️ Settings</a>
+      <form method="post" action="/logout">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="nav-btn nav-btn-action">Log out</button>
+      </form>
     </nav>
   </header>
 
