@@ -252,7 +252,6 @@ def get_solar_production(lat, lon, panel_kwp):
         return hourly_kw
 
 @app.route("/")
-@login_required
 def home():
     return render_template("index.html")
 
