@@ -30,13 +30,118 @@ body {
   padding-bottom: 40px;
 }
 
+/* Slim dark top bar, pinned while the page scrolls */
 .navbar {
+  --nav-text: #e2e8f0;
+  --nav-muted: #94a3b8;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  background-color: var(--surface-color);
+  padding: 0.5rem 2rem;
+  background-color: #111318;
+  color: var(--nav-text);
+  border-bottom: 1px solid #000;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.navbar .logo h2 {
+  font-size: 1.05rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+
+.navbar .badge {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--nav-text);
+}
+
+.navbar .nav-btn { color: var(--nav-muted); }
+.navbar .nav-btn:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+.navbar .nav-btn.active {
+  color: var(--primary-color);
+  background-color: rgba(245, 158, 11, 0.15);
+}
+
+html { scroll-behavior: smooth; }
+#dashboard { scroll-margin-top: 64px; }
+
+/* Hero banner: artwork on the left, title + blurb on the right */
+.hero {
+  background-color: var(--bg-color);
+  background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
+  background-size: 18px 18px;
   border-bottom: 1px solid var(--border-color);
+  padding: 3.5rem 2rem;
+}
+
+.hero-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+.hero-art {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.hero-text h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.25;
+  margin-bottom: 1rem;
+}
+
+.hero-text p {
+  color: var(--text-muted);
+  line-height: 1.7;
+  max-width: 46ch;
+  margin-bottom: 1.5rem;
+}
+
+.hero-btn {
+  display: inline-block;
+  padding: 0.6rem 1.4rem;
+  border: 1px solid var(--text-main);
+  border-radius: 999px;
+  color: var(--text-main);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.hero-btn:hover {
+  background-color: var(--text-main);
+  color: var(--bg-color);
+}
+
+@media (max-width: 760px) {
+  .hero { padding: 2rem 16px; }
+  .hero-inner {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    text-align: center;
+  }
+  .hero-art { max-width: 220px; margin: 0 auto; }
+  .hero-text p { margin-left: auto; margin-right: auto; }
+  .hero-text h1 { font-size: 1.5rem; }
 }
 
 .logo {
@@ -85,16 +190,29 @@ body {
   margin: 0 auto;
 }
 
-@media (max-width: 900px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 .sidebar, .content {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+/* Left column scrolls with the page until its last item is visible, then
+   stops while the graphs keep scrolling. --sidebar-top is set by
+   sticky-sidebar.js: the header height when the sidebar fits on screen,
+   or a negative offset so it sticks by its bottom edge when it is taller. */
+.sidebar {
+  position: sticky;
+  top: var(--sidebar-top, 88px);
+  align-self: start;
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    position: static;
+  }
 }
 
 .card {

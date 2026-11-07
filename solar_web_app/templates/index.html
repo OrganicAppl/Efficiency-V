@@ -34,7 +34,22 @@
     </nav>
   </header>
 
-  <main class="dashboard-grid">
+  <!-- HERO BANNER (scrolls away; the slim bar above stays pinned) -->
+  <section class="hero">
+    <div class="hero-inner">
+      <img class="hero-art" src="{{ url_for('brand_logo') }}" alt="Silver Lining artwork">
+      <div class="hero-text">
+        <h1>Every cloud<br>has a silver lining</h1>
+        <p>
+          Tell us where your panels live and what you need to run. We'll line up
+          your heaviest appliances with the sunniest, cheapest hours of the day.
+        </p>
+        <a href="#dashboard" class="hero-btn">View schedule ↓</a>
+      </div>
+    </div>
+  </section>
+
+  <main class="dashboard-grid" id="dashboard">
     
     <!-- LEFT SIDEBAR -->
     <aside class="sidebar">
@@ -185,5 +200,6 @@
 
   <script src="/static/script.js"></script>
   <script src="/static/chat.js"></script>
+  <script src="/static/sticky-sidebar.js"></script>
 </body>
 </html>
