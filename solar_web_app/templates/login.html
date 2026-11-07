@@ -20,7 +20,9 @@
       <h1>Welcome back</h1>
       <p class="subtitle" style="margin-top: 0.5rem;">Log in to manage your home energy.</p>
 
-      <form method="post">
+      <form id="login-form" method="post" action="/login">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <p id="login-message" class="subtitle" role="alert" aria-live="polite"></p>
         <div class="form-group">
           <label for="username">Email address</label>
           <input
@@ -47,5 +49,6 @@
       </form>
     </section>
   </main>
+  <script src="/static/databricks.js"></script>
 </body>
 </html>

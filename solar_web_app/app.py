@@ -1,5 +1,9 @@
 import json
+import hashlib
+import hmac
 import math
+import os
+import secrets
 import urllib.request
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
@@ -248,15 +252,70 @@ def get_solar_production(lat, lon, panel_kwp):
         return hourly_kw
 
 @app.route("/")
+@login_required
 def home():
     return render_template("index.html")
 
-# Add this route right below your @app.route("/")
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if "user_email" in session:
+        return redirect(url_for("home"))
+
+    if request.method == "GET":
+        csrf_token = session.setdefault("csrf_token", secrets.token_urlsafe(32))
+        return render_template("login.html", csrf_token=csrf_token)
+
+    submitted_csrf = request.form.get("csrf_token", "")
+    expected_csrf = session.get("csrf_token", "")
+    if not expected_csrf or not hmac.compare_digest(submitted_csrf, expected_csrf):
+        return jsonify({"success": False, "error": "Your login session expired. Reload the page and try again."}), 400
+
+    email = request.form.get("username", "").strip()
+    password = request.form.get("password", "")
+    if not email or not password:
+        return jsonify({"success": False, "error": "Enter your email and password."}), 400
+
+    try:
+        rows = lookup_login(email)
+    except Exception:
+        app.logger.exception("Databricks login lookup failed")
+        return jsonify({"success": False, "error": "Login is temporarily unavailable."}), 503
+
+    if len(rows) != 1:
+        return jsonify({"success": False, "error": "Invalid email or password."}), 401
+
+    stored_email, stored_hash, salt = rows[0]
+    if not isinstance(stored_email, str) or not isinstance(stored_hash, str) or not isinstance(salt, str):
+        app.logger.error("Databricks login row has an unexpected value type")
+        return jsonify({"success": False, "error": "Login is temporarily unavailable."}), 503
+
+    if len(stored_hash) != 64:
+        app.logger.error("Databricks login row has an invalid password hash")
+        return jsonify({"success": False, "error": "Login is temporarily unavailable."}), 503
+
+    try:
+        bytes.fromhex(stored_hash)
+    except ValueError:
+        app.logger.error("Databricks login row has a non-hexadecimal password hash")
+        return jsonify({"success": False, "error": "Login is temporarily unavailable."}), 503
+
+    candidate_hash = hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
+    if not hmac.compare_digest(candidate_hash, stored_hash.lower()):
+        return jsonify({"success": False, "error": "Invalid email or password."}), 401
+
+    session.clear()
+    session["user_email"] = stored_email
+    return jsonify({"success": True})
+
+
 @app.route("/settings")
+@login_required
 def settings():
     return render_template("settings.html")
 
 @app.route("/api/optimize", methods=["POST"])
+@login_required
 def optimize():
     try:
         body = request.get_json(force=True) or {}
