@@ -4,13 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SolarPeak AI - Home Energy Dispatcher</title>
-  <link rel="stylesheet" href="static/style.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-  <!-- Chart.js via CDN for responsive charts -->
+  <link rel="stylesheet" href="/static/style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
 </head>
 <body>
 
@@ -23,13 +18,12 @@
     <div id="location-badge" class="badge">Loading location...</div>
   </header>
 
-  <!-- MAIN CONTAINER -->
   <main class="dashboard-grid">
     
-    <!-- LEFT SIDEBAR: CONTROLS & DEVICES -->
+    <!-- LEFT SIDEBAR -->
     <aside class="sidebar">
       
-      <!-- Section 1: Location & Panels -->
+      <!-- Location & Solar -->
       <section class="card">
         <h3>📍 Location & Solar Array</h3>
         <div class="form-group">
@@ -42,40 +36,44 @@
         </div>
       </section>
 
-      <!-- Section 2: Custom Devices -->
+      <!-- Manage Devices -->
       <section class="card">
-        <h3>🔌 Smart Home Devices</h3>
-        <p class="subtitle">Add heavy loads to schedule during solar peak.</p>
+        <div class="card-title-row">
+          <h3 id="form-heading">🔌 Smart Home Devices</h3>
+          <button id="cancel-edit-btn" class="btn-link" style="display: none;">Cancel Edit</button>
+        </div>
+        <p class="subtitle">Add or edit heavy appliances.</p>
 
-        <form id="add-device-form" class="device-inputs">
-          <input type="text" id="dev-name" placeholder="Device Name (e.g., EV)" required>
+        <form id="device-form" class="device-inputs">
+          <input type="hidden" id="editing-device-id" value="">
+          <input type="text" id="dev-name" placeholder="Device Name (e.g. EV)" required>
           <div class="input-row">
-            <input type="number" id="dev-kw" placeholder="kW (e.g. 7.2)" step="0.1" required>
-            <input type="number" id="dev-hours" placeholder="Hours (e.g. 3)" min="1" max="24" required>
+            <input type="number" id="dev-kw" placeholder="Power kW" step="0.1" required>
+            <input type="number" id="dev-hours" placeholder="Run Hrs" min="1" max="24" required>
             <input type="number" id="dev-deadline" placeholder="Deadline Hr (0-23)" min="1" max="24" value="20" required>
           </div>
-          <button type="submit" class="btn btn-secondary">+ Add Appliance</button>
+          <button type="submit" id="submit-device-btn" class="btn btn-secondary">+ Add Appliance</button>
         </form>
 
         <ul id="device-list" class="device-list">
-          <!-- Populated by JavaScript -->
+          <!-- Populated by script.js -->
         </ul>
       </section>
 
       <button id="calculate-btn" class="btn btn-primary">⚡ Optimize Schedule</button>
     </aside>
 
-    <!-- RIGHT CONTENT: DASHBOARD & CHARTS -->
+    <!-- RIGHT CONTENT -->
     <section class="content">
       
-      <!-- KPI Stats Row -->
+      <!-- Metrics Row -->
       <div class="stats-row">
         <div class="stat-card">
           <h4>Peak Solar</h4>
           <p id="stat-peak" class="stat-value">0.0 kW</p>
         </div>
         <div class="stat-card">
-          <h4>Forecasted Generation</h4>
+          <h4>Total Solar</h4>
           <p id="stat-total" class="stat-value">0.0 kWh</p>
         </div>
         <div class="stat-card">
@@ -88,33 +86,37 @@
         </div>
       </div>
 
-      <!-- Chart Container -->
+      <!-- Chart -->
       <div class="card chart-card">
-        <h3>24-Hour Solar Production vs. Electricity Price</h3>
+        <h3>24-Hour Solar Production vs. Electricity Tariff</h3>
         <div class="chart-wrapper">
           <canvas id="solarChart"></canvas>
         </div>
       </div>
 
-      <!-- Automated Schedule Table -->
+      <!-- Interactive IoT Schedule Table -->
       <div class="card table-card">
         <div class="table-header">
-          <h3>📋 Scheduled IoT Dispatch</h3>
+          <div>
+            <h3>📋 Scheduled IoT Dispatch</h3>
+            <span class="table-hint">💡 Click any column header to sort. Use <b>×</b> or <b>+ Add</b> to edit active hours.</span>
+          </div>
           <button id="iot-trigger-btn" class="btn btn-sm btn-outline">🚀 Trigger Live MQTT Command</button>
         </div>
+        
         <div class="table-wrapper">
-          <table>
+          <table id="schedule-table">
             <thead>
               <tr>
-                <th>Time</th>
-                <th>Solar Output</th>
-                <th>Grid Price</th>
-                <th>TOU Tier</th>
-                <th>Appliance Action</th>
+                <th data-sort="hour" class="sortable">Time <span class="sort-indicator">▲</span></th>
+                <th data-sort="solar_kw" class="sortable">Solar Output <span class="sort-indicator"></span></th>
+                <th data-sort="grid_rate" class="sortable">Grid Price <span class="sort-indicator"></span></th>
+                <th data-sort="tier" class="sortable">TOU Tier <span class="sort-indicator"></span></th>
+                <th data-sort="actions" class="sortable">Appliance Action (Click to Edit) <span class="sort-indicator"></span></th>
               </tr>
             </thead>
             <tbody id="schedule-body">
-              <!-- Populated by JavaScript -->
+              <!-- Populated by script.js -->
             </tbody>
           </table>
         </div>

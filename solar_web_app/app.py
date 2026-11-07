@@ -6,7 +6,6 @@ from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
-# State Tariff Profiles
 STATE_TARIFFS = {
     "CA": {"utility": "California TOU / NEM 3.0", "peak_rate": 0.52, "off_rate": 0.16, "export": 0.06, "peak_start": 16, "peak_end": 21},
     "TX": {"utility": "Texas ERCOT Region", "peak_rate": 0.22, "off_rate": 0.08, "export": 0.08, "peak_start": 14, "peak_end": 20},
@@ -16,7 +15,6 @@ STATE_TARIFFS = {
     "DEFAULT": {"utility": "US Standard TOU", "peak_rate": 0.28, "off_rate": 0.12, "export": 0.07, "peak_start": 15, "peak_end": 20}
 }
 
-# Guaranteed US Regional Fallback by first digit of ZIP code
 ZIP_REGION_FALLBACK = {
     "0": {"city": "New England Area", "state": "MA", "lat": 42.3601, "lon": -71.0589},
     "1": {"city": "New York / Tri-State", "state": "NY", "lat": 40.7128, "lon": -74.0060},
@@ -35,10 +33,9 @@ def get_location_from_zip(zip_code):
     if len(clean_zip) < 5:
         clean_zip = "90210"
 
-    # Source 1: Zippopotam
     try:
         url = f"https://api.zippopotam.us/us/{clean_zip}"
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (SolarOrchestratorApp)"})
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=3) as resp:
             data = json.loads(resp.read().decode())
             place = data["places"][0]
@@ -51,24 +48,6 @@ def get_location_from_zip(zip_code):
     except Exception:
         pass
 
-    # Source 2: Open-Meteo Geocoding
-    try:
-        url = f"https://geocoding-api.open-meteo.com/v1/search?name={clean_zip}&count=1&country=US&format=json"
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (SolarOrchestratorApp)"})
-        with urllib.request.urlopen(req, timeout=3) as resp:
-            data = json.loads(resp.read().decode())
-            if "results" in data and len(data["results"]) > 0:
-                res = data["results"][0]
-                return {
-                    "city": res.get("name", f"ZIP {clean_zip}"),
-                    "state": res.get("admin1_code", "CA"),
-                    "lat": float(res["latitude"]),
-                    "lon": float(res["longitude"])
-                }
-    except Exception:
-        pass
-
-    # Source 3: Offline Regional Fallback
     first_digit = clean_zip[0] if clean_zip and clean_zip[0] in ZIP_REGION_FALLBACK else "9"
     fallback = ZIP_REGION_FALLBACK[first_digit].copy()
     fallback["city"] = f"{fallback['city']} ({clean_zip})"
@@ -76,14 +55,13 @@ def get_location_from_zip(zip_code):
 
 def get_solar_production(lat, lon, panel_kwp):
     try:
-        # Standard GHI & Direct Irradiance (compatible with all Open-Meteo endpoints)
         url = (
             f"https://api.open-meteo.com/v1/forecast?"
             f"latitude={lat}&longitude={lon}&"
             f"hourly=shortwave_radiation,direct_normal_irradiance&"
             f"forecast_days=1&timezone=auto"
         )
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (SolarOrchestratorApp)"})
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=4) as resp:
             data = json.loads(resp.read().decode())
 
@@ -94,13 +72,11 @@ def get_solar_production(lat, lon, panel_kwp):
         for i, t_str in enumerate(times[:24]):
             dt = datetime.fromisoformat(t_str)
             irr = shortwave[i] if i < len(shortwave) else 0.0
-            # AC Power = panel_kwp * (W/m² / 1000) * 85% derate
             kw = max(0.0, round(panel_kwp * (irr / 1000.0) * 0.85, 2))
             hourly_kw.append({"hour": dt.hour, "time_label": f"{dt.hour:02d}:00", "solar_kw": kw})
         return hourly_kw
 
     except Exception:
-        # Offline Clear-Sky Simulation Fallback (Bell curve peak at 13:00)
         hourly_kw = []
         for h in range(24):
             if 6 <= h <= 18:
@@ -176,6 +152,11 @@ def optimize():
             "success": True,
             "location": loc,
             "utility": state_cfg["utility"],
+            "tariffs": {
+                "peak_rate": peak_rate,
+                "off_rate": off_rate,
+                "export_credit": export_credit
+            },
             "summary": {
                 "total_solar_kwh": round(sum(r["solar_kw"] for r in solar_data), 1),
                 "peak_solar_kw": max(r["solar_kw"] for r in solar_data),

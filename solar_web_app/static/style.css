@@ -1,13 +1,10 @@
-/* ==========================================================================
-   CSS CUSTOM VARIABLES (Change your theme colors and styling here!)
-   ========================================================================== */
 :root {
-  --primary-color: #f59e0b;       /* Solar Amber */
+  --primary-color: #f59e0b;
   --primary-hover: #d97706;
-  --secondary-color: #3b82f6;     /* Electric Blue */
+  --secondary-color: #3b82f6;
   --secondary-hover: #2563eb;
-  --bg-color: #f8fafc;            /* Canvas background */
-  --surface-color: #ffffff;       /* Card background */
+  --bg-color: #f8fafc;
+  --surface-color: #ffffff;
   --border-color: #e2e8f0;
   --text-main: #0f172a;
   --text-muted: #64748b;
@@ -17,9 +14,6 @@
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
 
-/* ==========================================================================
-   GLOBAL RESET & TYPOGRAPHY
-   ========================================================================== */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -36,9 +30,6 @@ body {
   padding-bottom: 40px;
 }
 
-/* ==========================================================================
-   NAVBAR
-   ========================================================================== */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -52,10 +43,6 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.logo-icon {
-  font-size: 1.5rem;
 }
 
 .tag {
@@ -76,15 +63,12 @@ body {
   font-weight: 600;
 }
 
-/* ==========================================================================
-   LAYOUT GRID
-   ========================================================================== */
 .dashboard-grid {
   display: grid;
   grid-template-columns: 360px 1fr;
   gap: 1.5rem;
   padding: 1.5rem 2rem;
-  max-width: 1400px;
+  max-width: 1440px;
   margin: 0 auto;
 }
 
@@ -100,9 +84,6 @@ body {
   gap: 1.5rem;
 }
 
-/* ==========================================================================
-   CARD DESIGN
-   ========================================================================== */
 .card {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
@@ -111,9 +92,10 @@ body {
   box-shadow: var(--shadow);
 }
 
-.card h3 {
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
+.card-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .subtitle {
@@ -122,9 +104,6 @@ body {
   margin-bottom: 1rem;
 }
 
-/* ==========================================================================
-   FORMS & INPUTS
-   ========================================================================== */
 .form-group {
   margin-bottom: 1rem;
 }
@@ -144,10 +123,9 @@ input[type="text"], input[type="number"], select {
   border-radius: 8px;
   font-size: 0.95rem;
   outline: none;
-  transition: border-color 0.2s;
 }
 
-input:focus {
+input:focus, select:focus {
   border-color: var(--secondary-color);
 }
 
@@ -162,9 +140,6 @@ input[type="range"] {
   margin: 8px 0;
 }
 
-/* ==========================================================================
-   BUTTONS
-   ========================================================================== */
 .btn {
   display: inline-block;
   width: 100%;
@@ -177,44 +152,15 @@ input[type="range"] {
   transition: all 0.2s;
 }
 
-.btn-primary {
-  background-color: var(--primary-color);
-  color: white;
-}
+.btn-primary { background-color: var(--primary-color); color: white; }
+.btn-primary:hover { background-color: var(--primary-hover); }
+.btn-secondary { background-color: #f1f5f9; color: var(--text-main); border: 1px solid var(--border-color); }
+.btn-secondary:hover { background-color: #e2e8f0; }
+.btn-sm { width: auto; padding: 6px 12px; font-size: 0.85rem; }
+.btn-outline { background: transparent; border: 1px solid var(--border-color); }
+.btn-link { background: none; border: none; color: var(--secondary-color); cursor: pointer; font-size: 0.85rem; }
 
-.btn-primary:hover {
-  background-color: var(--primary-hover);
-}
-
-.btn-secondary {
-  background-color: #f1f5f9;
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-}
-
-.btn-secondary:hover {
-  background-color: #e2e8f0;
-}
-
-.btn-sm {
-  width: auto;
-  padding: 6px 12px;
-  font-size: 0.85rem;
-}
-
-.btn-outline {
-  background: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--text-main);
-}
-
-.btn-outline:hover {
-  background: #f8fafc;
-}
-
-/* ==========================================================================
-   DEVICE LIST
-   ========================================================================== */
+/* Device List in Sidebar */
 .device-list {
   list-style: none;
   margin-top: 1rem;
@@ -235,27 +181,23 @@ input[type="range"] {
   border: 1px solid var(--border-color);
 }
 
-.device-info strong {
-  display: block;
-  font-size: 0.9rem;
+.device-actions-icons {
+  display: flex;
+  gap: 8px;
 }
 
-.device-info span {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-}
-
-.delete-btn {
+.icon-btn {
   background: none;
   border: none;
-  color: var(--danger);
   cursor: pointer;
-  font-size: 1.1rem;
+  font-size: 1rem;
+  padding: 2px 4px;
 }
 
-/* ==========================================================================
-   KPI STATS ROW
-   ========================================================================== */
+.icon-btn.delete { color: var(--danger); }
+.icon-btn.edit { color: var(--secondary-color); }
+
+/* KPI Stats */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -263,9 +205,7 @@ input[type="range"] {
 }
 
 @media (max-width: 768px) {
-  .stats-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
 }
 
 .stat-card {
@@ -280,7 +220,6 @@ input[type="range"] {
   font-size: 0.85rem;
   color: var(--text-muted);
   text-transform: uppercase;
-  margin-bottom: 0.25rem;
 }
 
 .stat-value {
@@ -292,24 +231,13 @@ input[type="range"] {
   background: #ecfdf5;
   border-color: #a7f3d0;
 }
+.stat-card.highlight .stat-value { color: var(--success); }
 
-.stat-card.highlight .stat-value {
-  color: var(--success);
-}
+/* Chart */
+.chart-card { height: 420px; }
+.chart-wrapper { position: relative; height: 330px; width: 100%; }
 
-/* ==========================================================================
-   CHARTS & TABLES
-   ========================================================================== */
-.chart-card {
-  height: 420px;
-}
-
-.chart-wrapper {
-  position: relative;
-  height: 330px;
-  width: 100%;
-}
-
+/* Table & Sorting */
 .table-header {
   display: flex;
   justify-content: space-between;
@@ -317,9 +245,14 @@ input[type="range"] {
   margin-bottom: 1rem;
 }
 
-.table-wrapper {
-  overflow-x: auto;
+.table-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 3px;
 }
+
+.table-wrapper { overflow-x: auto; }
 
 table {
   width: 100%;
@@ -331,6 +264,7 @@ table {
 th, td {
   padding: 12px;
   border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
 }
 
 th {
@@ -339,18 +273,73 @@ th {
   font-weight: 600;
 }
 
-.action-pill {
-  display: inline-block;
-  background-color: #fef3c7;
-  color: #92400e;
-  border-radius: 12px;
-  padding: 2px 10px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  margin-right: 4px;
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s;
 }
 
-.action-idle {
+th.sortable:hover {
+  background-color: #edf2f7;
+  color: var(--text-main);
+}
+
+.sort-indicator {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 0.75rem;
+  color: var(--secondary-color);
+}
+
+/* In-Table Device Action Pills & Controls */
+.table-actions-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.action-pill {
+  display: inline-flex;
+  align-items: center;
+  background-color: #fef3c7;
+  color: #92400e;
+  border-radius: 14px;
+  padding: 3px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1px solid #fde68a;
+}
+
+.action-pill .remove-action {
+  margin-left: 6px;
+  color: #b45309;
+  cursor: pointer;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-pill .remove-action:hover {
+  background-color: #b45309;
+  color: #ffffff;
+}
+
+.inline-add-device {
+  padding: 3px 8px;
+  font-size: 0.78rem;
+  border-radius: 6px;
+  border: 1px dashed var(--border-color);
+  background-color: transparent;
+  cursor: pointer;
   color: var(--text-muted);
-  font-style: italic;
+}
+
+.inline-add-device:hover {
+  border-color: var(--secondary-color);
+  color: var(--secondary-color);
 }
