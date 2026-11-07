@@ -4,10 +4,11 @@ import hmac
 import math
 import os
 import secrets
+import time
 import urllib.request
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify
-import os
+from functools import wraps
+from flask import Flask, render_template, request, jsonify, redirect, session, url_for
 import re
 import requests
 from dotenv import load_dotenv
@@ -146,8 +147,155 @@ Dashboard data (JSON):
 # CHAT API ROUTE
 # ==============================================================================
 app = Flask(__name__)
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
+if not app.secret_key:
+    raise RuntimeError(
+        "FLASK_SECRET_KEY is required. Set it to a long, random value before starting the app."
+    )
+
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=os.getenv("APP_ENV") == "production",
+)
+
+LOGIN_QUERY = """
+SELECT email, password_hash, salt
+FROM workspace.users.login
+WHERE lower(email) = lower(:email)
+LIMIT 2
+"""
+REGISTER_QUERY = """
+INSERT INTO workspace.users.login (email, password_hash, salt)
+VALUES (:email, :password_hash, :salt)
+"""
+
+
+def login_required(view):
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        if "user_email" not in session:
+            if request.path.startswith("/api/"):
+                return jsonify({"success": False, "error": "Authentication required."}), 401
+            return redirect(url_for("login"))
+        return view(*args, **kwargs)
+
+    return wrapped_view
+
+
+def execute_databricks_statement(statement_sql, parameters):
+    hostname = os.getenv("DATABRICKS_SERVER_HOSTNAME")
+    token = os.getenv("DATABRICKS_TOKEN")
+    warehouse_id = os.getenv("DATABRICKS_WAREHOUSE_ID")
+    http_path = os.getenv("DATABRICKS_HTTP_PATH", "")
+    if not warehouse_id:
+        warehouse_match = re.search(r"(?:^|/)warehouses/([^/]+)", http_path.rstrip("/"))
+        if warehouse_match:
+            warehouse_id = warehouse_match.group(1)
+    if not hostname or not token or not warehouse_id:
+        raise RuntimeError(
+            "Set DATABRICKS_SERVER_HOSTNAME, DATABRICKS_TOKEN, and "
+            "DATABRICKS_WAREHOUSE_ID (or DATABRICKS_HTTP_PATH) to enable login."
+        )
+
+    hostname = hostname.removeprefix("https://").removeprefix("http://").rstrip("/")
+    base_url = f"https://{hostname}/api/2.0/sql/statements"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+    response = requests.post(
+        base_url,
+        headers=headers,
+        json={
+            "statement": statement_sql,
+            "warehouse_id": warehouse_id,
+            "wait_timeout": "10s",
+            "on_wait_timeout": "CONTINUE",
+            "disposition": "INLINE",
+            "format": "JSON_ARRAY",
+            "parameters": parameters,
+        },
+        timeout=(5, 15),
+    )
+    statement = _read_databricks_response(response)
+
+    deadline = time.monotonic() + 30
+    while statement.get("status", {}).get("state") in {"PENDING", "RUNNING"}:
+        statement_id = statement.get("statement_id")
+        if not statement_id:
+            raise RuntimeError("Databricks did not return a statement ID.")
+        if time.monotonic() >= deadline:
+            raise RuntimeError("Databricks login query timed out.")
+        time.sleep(0.25)
+        response = requests.get(
+            f"{base_url}/{statement_id}",
+            headers=headers,
+            timeout=(5, 15),
+        )
+        statement = _read_databricks_response(response)
+
+    state = statement.get("status", {}).get("state")
+    if state != "SUCCEEDED":
+        error = statement.get("status", {}).get("error") or statement.get("error") or {}
+        detail = error.get("message") if isinstance(error, dict) else str(error)
+        if not detail:
+            detail = "No error details were returned."
+        raise RuntimeError(
+            f"Databricks statement failed with state {state or 'unknown'}: {detail}"
+        )
+
+    return statement
+
+
+def _read_databricks_response(response):
+    try:
+        body = response.json()
+    except ValueError as err:
+        raise RuntimeError(
+            f"Databricks returned non-JSON data (HTTP {response.status_code})."
+        ) from err
+
+    if not response.ok:
+        if isinstance(body, dict):
+            detail = body.get("message") or body.get("error") or "No error details were returned."
+        else:
+            detail = "No error details were returned."
+        raise RuntimeError(f"Databricks request failed (HTTP {response.status_code}): {detail}")
+    if not isinstance(body, dict):
+        raise RuntimeError("Databricks returned an unexpected response format.")
+    return body
+
+
+def lookup_login(email):
+    statement = execute_databricks_statement(
+        LOGIN_QUERY,
+        [{"name": "email", "type": "STRING", "value": email}],
+    )
+    rows = statement.get("result", {}).get("data_array")
+    if not isinstance(rows, list):
+        raise RuntimeError("Databricks returned no login query results.")
+    # Inside lookup_login (app.py)
+    if not rows:
+        return None  # Return None instead of raising an error when a user isn't found!
+    return rows
+
+
+def create_login(email, password):
+    salt = secrets.token_hex(16)
+    password_hash = hashlib.sha256((salt + password).encode("utf-8")).hexdigest()
+    execute_databricks_statement(
+        REGISTER_QUERY,
+        [
+            {"name": "email", "type": "STRING", "value": email},
+            {"name": "password_hash", "type": "STRING", "value": password_hash},
+            {"name": "salt", "type": "STRING", "value": salt},
+        ],
+    )
+
 
 @app.route("/api/chat", methods=["POST"])
+@login_required
 def chat():
     body = request.get_json(silent=True)
     if not isinstance(body, dict):
@@ -252,6 +400,7 @@ def get_solar_production(lat, lon, panel_kwp):
         return hourly_kw
 
 @app.route("/")
+@login_required
 def home():
     return render_template("index.html")
 
@@ -284,8 +433,17 @@ def login():
     if len(rows) != 1:
         return jsonify({"success": False, "error": "Invalid email or password."}), 401
 
+    if not isinstance(rows[0], list) or len(rows[0]) != 3:
+        app.logger.error("Databricks login query returned a malformed row")
+        return jsonify({"success": False, "error": "Login is temporarily unavailable."}), 503
+
     stored_email, stored_hash, salt = rows[0]
-    if not isinstance(stored_email, str) or not isinstance(stored_hash, str) or not isinstance(salt, str):
+    if (
+        not isinstance(stored_email, str)
+        or not isinstance(stored_hash, str)
+        or not isinstance(salt, str)
+        or not salt
+    ):
         app.logger.error("Databricks login row has an unexpected value type")
         return jsonify({"success": False, "error": "Login is temporarily unavailable."}), 503
 
@@ -305,6 +463,39 @@ def login():
 
     session.clear()
     session["user_email"] = stored_email
+    return jsonify({"success": True})
+
+
+@app.route("/register", methods=["POST"])
+def register():
+    if "user_email" in session:
+        return jsonify({"success": False, "error": "You are already signed in."}), 400
+
+    submitted_csrf = request.form.get("csrf_token", "")
+    expected_csrf = session.get("csrf_token", "")
+    if not expected_csrf or not hmac.compare_digest(submitted_csrf, expected_csrf):
+        return jsonify({"success": False, "error": "Your session expired. Reload the page and try again."}), 400
+
+    email = request.form.get("username", "").strip()
+    password = request.form.get("password", "")
+    confirm_password = request.form.get("confirm_password", "")
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+        return jsonify({"success": False, "error": "Enter a valid email address."}), 400
+    if len(password) < 12:
+        return jsonify({"success": False, "error": "Use a password with at least 12 characters."}), 400
+    if password != confirm_password:
+        return jsonify({"success": False, "error": "The passwords do not match."}), 400
+
+    try:
+        if lookup_login(email):
+            return jsonify({"success": False, "error": "An account with that email already exists."}), 409
+        create_login(email, password)
+    except Exception:
+        app.logger.exception("Databricks account creation failed")
+        return jsonify({"success": False, "error": "Account creation is temporarily unavailable."}), 503
+
+    session.clear()
+    session["user_email"] = email
     return jsonify({"success": True})
 
 

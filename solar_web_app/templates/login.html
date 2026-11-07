@@ -17,36 +17,86 @@
 
   <main style="max-width: 480px; margin: 4rem auto; padding: 0 1rem;">
     <section class="card">
-      <h1>Welcome back</h1>
-      <p class="subtitle" style="margin-top: 0.5rem;">Log in to manage your home energy.</p>
+      <div id="login-panel">
+        <h1>Welcome back</h1>
+        <p class="subtitle" style="margin-top: 0.5rem;">Log in to manage your home energy.</p>
+        <form id="login-form" method="post" action="/login" data-auth-form>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <p id="login-message" class="subtitle" role="alert" aria-live="polite"></p>
+          <div class="form-group">
+            <label for="username">Email address</label>
+            <input
+              type="email"
+              id="username"
+              name="username"
+              autocomplete="username"
+              placeholder="you@example.com"
+              required
+            >
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              autocomplete="current-password"
+              placeholder="Enter your password"
+              required
+            >
+          </div>
+          <button type="submit" class="btn btn-primary">Log In</button>
+        </form>
+        <p class="subtitle" style="margin-top: 1rem; text-align: center;">
+          New here? <button type="button" class="btn-link" data-show-register>Create an account</button>
+        </p>
+      </div>
 
-      <form id="login-form" method="post" action="/login">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <p id="login-message" class="subtitle" role="alert" aria-live="polite"></p>
-        <div class="form-group">
-          <label for="username">Email address</label>
-          <input
-            type="email"
-            id="username"
-            name="username"
-            autocomplete="username"
-            placeholder="you@example.com"
-            required
-          >
-        </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            autocomplete="current-password"
-            placeholder="Enter your password"
-            required
-          >
-        </div>
-        <button type="submit" class="btn btn-primary">Log In</button>
-      </form>
+      <div id="register-panel" hidden>
+        <h1>Create your account</h1>
+        <p class="subtitle" style="margin-top: 0.5rem;">Use your email address and create a password.</p>
+        <form id="register-form" method="post" action="/register" data-auth-form>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <p id="register-message" class="subtitle" role="alert" aria-live="polite"></p>
+          <div class="form-group">
+            <label for="register-username">Email address</label>
+            <input
+              type="email"
+              id="register-username"
+              name="username"
+              autocomplete="email"
+              placeholder="you@example.com"
+              required
+            >
+          </div>
+          <div class="form-group">
+            <label for="register-password">Password (at least 12 characters)</label>
+            <input
+              type="password"
+              id="register-password"
+              name="password"
+              autocomplete="new-password"
+              minlength="12"
+              required
+            >
+          </div>
+          <div class="form-group">
+            <label for="confirm-password">Confirm password</label>
+            <input
+              type="password"
+              id="confirm-password"
+              name="confirm_password"
+              autocomplete="new-password"
+              minlength="12"
+              required
+            >
+          </div>
+          <button type="submit" class="btn btn-primary">Create Account</button>
+        </form>
+        <p class="subtitle" style="margin-top: 1rem; text-align: center;">
+          Already have an account? <button type="button" class="btn-link" data-show-login>Log in</button>
+        </p>
+      </div>
     </section>
   </main>
   <script src="/static/databricks.js"></script>
