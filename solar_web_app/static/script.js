@@ -1,4 +1,3 @@
-// Default Devices in Memory
 let devices = [
   { id: 1, name: "Tesla Model Y", power_kw: 7.2, duration_hours: 3, deadline: 19, enabled: true },
   { id: 2, name: "Central AC Pre-Cool", power_kw: 3.5, duration_hours: 2, deadline: 16, enabled: true },
@@ -8,7 +7,6 @@ let devices = [
 
 let chartInstance = null;
 
-// UI Elements
 const zipInput = document.getElementById("zip-code");
 const panelInput = document.getElementById("panel-kwp");
 const kwpVal = document.getElementById("kwp-val");
@@ -17,10 +15,8 @@ const addForm = document.getElementById("add-device-form");
 const calculateBtn = document.getElementById("calculate-btn");
 const iotTriggerBtn = document.getElementById("iot-trigger-btn");
 
-// Slider dynamic text
 panelInput.addEventListener("input", (e) => kwpVal.textContent = e.target.value);
 
-// Render Device List UI
 function renderDeviceList() {
   deviceList.innerHTML = "";
   devices.forEach((dev) => {
@@ -42,28 +38,20 @@ function removeDevice(id) {
   renderDeviceList();
 }
 
-// Add New Device Handler
 addForm.addEventListener("submit", (e) => {
   e.preventDefault();
-  const name = document.getElementById("dev-name").value;
-  const kw = parseFloat(document.getElementById("dev-kw").value);
-  const hours = parseInt(document.getElementById("dev-hours").value);
-  const deadline = parseInt(document.getElementById("dev-deadline").value);
-
   devices.push({
     id: Date.now(),
-    name,
-    power_kw: kw,
-    duration_hours: hours,
-    deadline,
+    name: document.getElementById("dev-name").value,
+    power_kw: parseFloat(document.getElementById("dev-kw").value),
+    duration_hours: parseInt(document.getElementById("dev-hours").value),
+    deadline: parseInt(document.getElementById("dev-deadline").value),
     enabled: true
   });
-
   addForm.reset();
   renderDeviceList();
 });
 
-// Fetch Solar & Optimized Schedule from Backend
 async function fetchOptimization() {
   calculateBtn.textContent = "Calculating...";
   calculateBtn.disabled = true;
@@ -73,7 +61,7 @@ async function fetchOptimization() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        zip_code: zipInput.value,
+        zip_code: zipInput.value.trim(),
         panel_kwp: parseFloat(panelInput.value),
         devices: devices
       })
@@ -81,50 +69,47 @@ async function fetchOptimization() {
 
     const data = await response.json();
 
-    // Update Header & KPIs
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || `Server status ${response.status}`);
+    }
+
     document.getElementById("location-badge").textContent = `${data.location.city}, ${data.location.state} (${data.utility})`;
     document.getElementById("stat-peak").textContent = `${data.summary.peak_solar_kw} kW`;
     document.getElementById("stat-total").textContent = `${data.summary.total_solar_kwh} kWh`;
     document.getElementById("stat-cost").textContent = `$${data.summary.optimized_cost}`;
     document.getElementById("stat-savings").textContent = `$${data.summary.savings}`;
 
-    // Render Chart & Table
     renderChart(data.hourly);
     renderTable(data.hourly);
 
   } catch (err) {
-    alert("Error fetching data. Please ensure the ZIP code is valid.");
-    console.error(err);
+    console.error("Dashboard error:", err);
+    alert(`Could not load schedule: ${err.message}`);
   } finally {
     calculateBtn.textContent = "⚡ Optimize Schedule";
     calculateBtn.disabled = false;
   }
 }
 
-// Render Chart.js Dual Axis Chart
 function renderChart(hourlyData) {
   const ctx = document.getElementById("solarChart").getContext("2d");
-  const labels = hourlyData.map(d => d.time_label);
-  const solarKWs = hourlyData.map(d => d.solar_kw);
-  const rates = hourlyData.map(d => d.grid_rate);
-
   if (chartInstance) chartInstance.destroy();
 
   chartInstance = new Chart(ctx, {
     type: "bar",
     data: {
-      labels: labels,
+      labels: hourlyData.map(d => d.time_label),
       datasets: [
         {
-          label: "Solar Generation (kW)",
-          data: solarKWs,
+          label: "Solar Power (kW)",
+          data: hourlyData.map(d => d.solar_kw),
           backgroundColor: "#f59e0b",
           yAxisID: "ySolar",
           borderRadius: 4
         },
         {
-          label: "Grid Tariff ($/kWh)",
-          data: rates,
+          label: "Tariff ($/kWh)",
+          data: hourlyData.map(d => d.grid_rate),
           type: "line",
           borderColor: "#ef4444",
           borderWidth: 2,
@@ -138,23 +123,13 @@ function renderChart(hourlyData) {
       responsive: true,
       maintainAspectRatio: false,
       scales: {
-        ySolar: {
-          type: "linear",
-          position: "left",
-          title: { display: true, text: "Estimated Solar (kW)" }
-        },
-        yRate: {
-          type: "linear",
-          position: "right",
-          title: { display: true, text: "Tariff ($/kWh)" },
-          grid: { drawOnChartArea: false }
-        }
+        ySolar: { type: "linear", position: "left", title: { display: true, text: "Estimated Solar (kW)" } },
+        yRate: { type: "linear", position: "right", title: { display: true, text: "Grid Tariff ($/kWh)" }, grid: { drawOnChartArea: false } }
       }
     }
   });
 }
 
-// Render Schedule Table
 function renderTable(hourlyData) {
   const tbody = document.getElementById("schedule-body");
   tbody.innerHTML = "";
@@ -163,7 +138,7 @@ function renderTable(hourlyData) {
     const tr = document.createElement("tr");
     const actionsHtml = row.actions.length > 0
       ? row.actions.map(a => `<span class="action-pill">${a}</span>`).join("")
-      : `<span class="action-idle">Idle / Battery charging</span>`;
+      : `<span class="action-idle">Idle / Battery storing</span>`;
 
     tr.innerHTML = `
       <td><strong>${row.time_label}</strong></td>
@@ -176,13 +151,11 @@ function renderTable(hourlyData) {
   });
 }
 
-// IoT Live Simulation
 iotTriggerBtn.addEventListener("click", () => {
-  const currentHour = new Date().getHours();
-  alert(`[IoT Webhook Sent]: Dispatch command issued to Home Assistant MQTT for Hour ${currentHour}:00!`);
+  const hr = new Date().getHours();
+  alert(`[IoT Webhook]: Successfully published MQTT command to Home Assistant for ${hr}:00!`);
 });
 
-// Run Initial Setup
 renderDeviceList();
 calculateBtn.addEventListener("click", fetchOptimization);
 window.onload = fetchOptimization;
