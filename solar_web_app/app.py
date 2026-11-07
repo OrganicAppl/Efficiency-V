@@ -6,56 +6,169 @@ import os
 import secrets
 import urllib.request
 from datetime import datetime
-from functools import wraps
-from flask import Flask, render_template, request, jsonify, redirect, session, url_for
-from databricks import sql
+from flask import Flask, render_template, request, jsonify
+import os
+import re
+import requests
+from dotenv import load_dotenv
 
-app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY")
-if not app.secret_key:
-    raise RuntimeError("Set the FLASK_SECRET_KEY environment variable.")
+# Load GEMINI_API_KEY from .env
+load_dotenv()
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-app.config.update(
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=os.environ.get("APP_ENV") == "production",
-)
+# ==============================================================================
+# INPUT SANITIZATION & GUARDRAILS
+# ==============================================================================
+PROMPT_INJECTION_PATTERNS = [
+    r"ignore\s+(all\s+)?(previous|prior|above)\s+instructions",
+    r"you\s+are\s+now",
+    r"system\s*prompt",
+    r"reveal\s+(the\s+)?(prompt|instructions)",
+    r"jailbreak",
+    r"<script.*?>",
+    r"drop\s+table"
+]
 
-LOGIN_QUERY = """
-SELECT email, password_hash, salt
-FROM workspace.default.login
-WHERE lower(email) = lower(?)
-LIMIT 2
+ENERGY_KEYWORDS = [
+    "solar", "sun", "panel", "peak", "kw", "kwh", "price", "rate", "cost", "bill",
+    "tariff", "tou", "charge", "car", "ev", "tesla", "ac", "cool", "heat", "pump",
+    "washer", "dishwasher", "energy", "save", "savings", "battery", "weather",
+    "grid", "export", "schedule", "time", "hour", "when", "today", "tomorrow", "appliance", "production"
+]
+
+def sanitize_and_validate(user_text: str):
+    if not user_text or not isinstance(user_text, str):
+        return None, "Empty query received."
+
+    # 1. Length cap to prevent token flooding
+    cleaned = user_text.strip()[:300]
+
+    # 2. Block prompt injections
+    for pattern in PROMPT_INJECTION_PATTERNS:
+        if re.search(pattern, cleaned, re.IGNORECASE):
+            return None, "Security Alert: Potentially malicious or unsupported prompt detected."
+
+    # 4. Domain relevance filter
+    words = re.findall(r"\w+", cleaned.lower())
+    has_energy_topic = any(w in ENERGY_KEYWORDS for w in words)
+    greetings = ["hi", "hello", "hey", "help", "who", "what"]
+    is_greeting = any(cleaned.lower().startswith(g) for g in greetings) and len(cleaned.split()) <= 4
+
+    if not has_energy_topic and not is_greeting:
+        return None, "I am SolarBot, your smart energy copilot. I can only assist with your solar production, utility rates, and smart appliances."
+
+    return cleaned, None
+
+
+# ==============================================================================
+# CALL GEMINI API
+# ==============================================================================
+def ask_gemini(user_prompt: str, context: dict) -> str:
+    """
+    Sends the user question to Google Gemini grounded with the dashboard forecast.
+    """
+    if not GEMINI_API_KEY:
+        raise RuntimeError("GEMINI_API_KEY not found in .env file.")
+
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent"
+
+    system_instruction = f"""
+You are SolarBot, a helpful home solar and energy assistant.
+Use the dashboard data below when answering questions about this user's system.
+It contains a forecast, not measured real-time production. Do not invent missing
+measurements, rates, schedules, or location details. If dashboard data is not
+available, say so and give general information only. Distinguish solar power
+(kW) from energy generated (kWh). Stay focused on solar, electricity rates,
+and appliance scheduling. Answer in 2-4 concise sentences and use bold for
+important values.
+
+Dashboard data (JSON):
+{json.dumps(context, ensure_ascii=False, allow_nan=False)}
 """
 
+    payload = {
+        "systemInstruction": {
+            "parts": [{"text": system_instruction}]
+        },
+        "contents": [
+            {
+                "role": "user",
+                "parts": [{"text": user_prompt}]
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.3,
+            "maxOutputTokens": 512
+        }
+    }
 
-def login_required(view):
-    @wraps(view)
-    def wrapped_view(*args, **kwargs):
-        if "user_email" not in session:
-            if request.path.startswith("/api/"):
-                return jsonify({"success": False, "error": "Authentication required."}), 401
-            return redirect(url_for("login"))
-        return view(*args, **kwargs)
-
-    return wrapped_view
-
-
-def lookup_login(email):
-    connection = sql.connect(
-        server_hostname=os.environ["DATABRICKS_SERVER_HOSTNAME"],
-        http_path=os.environ["DATABRICKS_HTTP_PATH"],
-        access_token=os.environ["DATABRICKS_TOKEN"],
-    )
     try:
-        cursor = connection.cursor()
-        try:
-            cursor.execute(LOGIN_QUERY, parameters=[email])
-            return cursor.fetchall()
-        finally:
-            cursor.close()
-    finally:
-        connection.close()
+        response = requests.post(
+            url,
+            json=payload,
+            headers={
+                "Content-Type": "application/json",
+                "x-goog-api-key": GEMINI_API_KEY
+            },
+            timeout=(5, 45)
+        )
+    except requests.Timeout as err:
+        raise RuntimeError("Gemini did not respond within 45 seconds. Please try again.") from err
+    except requests.RequestException as err:
+        raise RuntimeError(f"Could not connect to Gemini: {err}") from err
+
+    try:
+        data = response.json()
+    except ValueError as err:
+        raise RuntimeError(f"Gemini returned an unreadable response (HTTP {response.status_code}).") from err
+
+    if response.status_code != 200:
+        error_msg = data.get("error", {}).get("message", "Gemini API request failed")
+        raise RuntimeError(f"Gemini error: {error_msg}")
+
+    candidates = data.get("candidates", [])
+    if not candidates:
+        feedback = data.get("promptFeedback", {}).get("blockReason", "No response candidate was returned.")
+        raise RuntimeError(f"Gemini could not answer: {feedback}")
+
+    candidate = candidates[0]
+    parts = candidate.get("content", {}).get("parts", [])
+    answer = "".join(part.get("text", "") for part in parts if isinstance(part.get("text"), str)).strip()
+    if not answer:
+        raise RuntimeError("Gemini returned an empty answer.")
+
+    if candidate.get("finishReason") == "MAX_TOKENS":
+        answer += "\n\n(Gemini cut off this answer at its output limit.)"
+    return answer
+
+
+# ==============================================================================
+# CHAT API ROUTE
+# ==============================================================================
+app = Flask(__name__)
+
+@app.route("/api/chat", methods=["POST"])
+def chat():
+    body = request.get_json(silent=True)
+    if not isinstance(body, dict):
+        return jsonify({"reply": "Please send a valid chat message.", "safe": False}), 400
+
+    raw_prompt = body.get("message", "")
+    context = body.get("context", {})
+    if not isinstance(context, dict):
+        context = {}
+
+    # 1. Sanitize & check guardrails first
+    clean_prompt, error_msg = sanitize_and_validate(raw_prompt)
+    if error_msg:
+        return jsonify({"reply": error_msg, "safe": False})
+
+    # 2. Call Gemini securely from backend
+    try:
+        ai_reply = ask_gemini(clean_prompt, context)
+    except RuntimeError as err:
+        return jsonify({"reply": str(err), "safe": False}), 502
+    return jsonify({"reply": ai_reply, "safe": True})
 
 STATE_TARIFFS = {
     "CA": {"utility": "California TOU / NEM 3.0", "peak_rate": 0.52, "off_rate": 0.16, "export": 0.06, "peak_start": 16, "peak_end": 21},

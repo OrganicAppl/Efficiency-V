@@ -136,7 +136,50 @@
 
     </section>
   </main>
+  <!-- FLOATING CHATBOT WIDGET (BOTTOM RIGHT) -->
+  <div id="chat-container">
+    
+    <!-- Floating Circular Button -->
+    <button id="chat-toggle-btn" class="chat-fab" title="Ask Energy AI">
+      <span class="chat-icon">💬</span>
+      <span class="chat-close-icon">&times;</span>
+    </button>
+
+    <!-- Collapsible Chat Window -->
+    <div id="chat-window" class="chat-window">
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <span class="status-dot"></span>
+          <div>
+            <strong>SolarBot AI</strong>
+            <small id="chat-context-badge">Live Context Loaded</small>
+          </div>
+        </div>
+        <button id="chat-min-btn" class="chat-min-btn">&minus;</button>
+      </div>
+
+      <div id="chat-messages" class="chat-messages">
+        <div class="message bot-msg">
+          Hello! I have loaded your home's live solar forecast and electric rates. Ask me anything about your schedule!
+        </div>
+      </div>
+
+      <form id="chat-form" class="chat-input-bar">
+        <input 
+          type="text" 
+          id="chat-input" 
+          placeholder="Ask about solar peak, EV, or savings..." 
+          maxlength="200" 
+          required 
+          autocomplete="off"
+        >
+        <button type="submit" class="chat-send-btn">➤</button>
+      </form>
+    </div>
+
+  </div>
 
   <script src="/static/script.js"></script>
+  <script src="/static/chat.js"></script>
 </body>
 </html>
