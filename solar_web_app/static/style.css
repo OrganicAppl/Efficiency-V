@@ -45,6 +45,19 @@ body {
   gap: 8px;
 }
 
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 50%;
+  background-color: #111;
+}
+
+.logo h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
 .tag {
   background-color: #fef3c7;
   color: #b45309;
@@ -410,6 +423,12 @@ html[data-font-size="xlarge"] { font-size: 20px; }
   font-size: 0.9rem;
   font-weight: 600;
   transition: all 0.2s;
+}
+
+.nav-btn-action {
+  border: 0;
+  background: none;
+  cursor: pointer;
 }
 
 .nav-btn:hover {
