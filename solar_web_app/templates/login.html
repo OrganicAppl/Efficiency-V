@@ -3,18 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SolarPeak AI - Home Energy Dispatcher</title>
-  <link rel="stylesheet" href="/static/style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>SolarPeak AI - Log In</title>
+  <link rel="stylesheet" href="../static/style.css">
+  <script src="../static/theme.js"></script>
 </head>
 <body>
+  <header class="navbar">
+    <div class="logo">
+      <span class="logo-icon">☀️</span>
+      <h2>SolarPeak <span class="tag">AI</span></h2>
+    </div>
+  </header>
 
+  <main style="max-width: 480px; margin: 4rem auto; padding: 0 1rem;">
+    <section class="card">
+      <h1>Welcome back</h1>
+      <p class="subtitle" style="margin-top: 0.5rem;">Log in to manage your home energy.</p>
 
-
-
-
-
-
-    <script src="/static/databricks.js"></script>
+      <form method="post">
+        <div class="form-group">
+          <label for="username">Email address</label>
+          <input
+            type="email"
+            id="username"
+            name="username"
+            autocomplete="username"
+            placeholder="you@example.com"
+            required
+          >
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            autocomplete="current-password"
+            placeholder="Enter your password"
+            required
+          >
+        </div>
+        <button type="submit" class="btn btn-primary">Log In</button>
+      </form>
+    </section>
+  </main>
 </body>
 </html>
