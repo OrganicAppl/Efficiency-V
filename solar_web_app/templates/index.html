@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SolarPeak AI - Home Energy Dispatcher</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <!-- Chart.js via CDN for responsive charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="logo">
+      <span class="logo-icon">☀️</span>
+      <h2>SolarPeak <span class="tag">AI</span></h2>
+    </div>
+    <div id="location-badge" class="badge">Loading location...</div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="dashboard-grid">
+    
+    <!-- LEFT SIDEBAR: CONTROLS & DEVICES -->
+    <aside class="sidebar">
+      
+      <!-- Section 1: Location & Panels -->
+      <section class="card">
+        <h3>📍 Location & Solar Array</h3>
+        <div class="form-group">
+          <label for="zip-code">US ZIP Code</label>
+          <input type="text" id="zip-code" value="92618" maxlength="5">
+        </div>
+        <div class="form-group">
+          <label for="panel-kwp">Panel Array Size: <span id="kwp-val">8.5</span> kWp</label>
+          <input type="range" id="panel-kwp" min="1" max="25" step="0.5" value="8.5">
+        </div>
+      </section>
+
+      <!-- Section 2: Custom Devices -->
+      <section class="card">
+        <h3>🔌 Smart Home Devices</h3>
+        <p class="subtitle">Add heavy loads to schedule during solar peak.</p>
+
+        <form id="add-device-form" class="device-inputs">
+          <input type="text" id="dev-name" placeholder="Device Name (e.g., EV)" required>
+          <div class="input-row">
+            <input type="number" id="dev-kw" placeholder="kW (e.g. 7.2)" step="0.1" required>
+            <input type="number" id="dev-hours" placeholder="Hours (e.g. 3)" min="1" max="24" required>
+            <input type="number" id="dev-deadline" placeholder="Deadline Hr (0-23)" min="1" max="24" value="20" required>
+          </div>
+          <button type="submit" class="btn btn-secondary">+ Add Appliance</button>
+        </form>
+
+        <ul id="device-list" class="device-list">
+          <!-- Populated by JavaScript -->
+        </ul>
+      </section>
+
+      <button id="calculate-btn" class="btn btn-primary">⚡ Optimize Schedule</button>
+    </aside>
+
+    <!-- RIGHT CONTENT: DASHBOARD & CHARTS -->
+    <section class="content">
+      
+      <!-- KPI Stats Row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <h4>Peak Solar</h4>
+          <p id="stat-peak" class="stat-value">0.0 kW</p>
+        </div>
+        <div class="stat-card">
+          <h4>Forecasted Generation</h4>
+          <p id="stat-total" class="stat-value">0.0 kWh</p>
+        </div>
+        <div class="stat-card">
+          <h4>Run Cost</h4>
+          <p id="stat-cost" class="stat-value">$0.00</p>
+        </div>
+        <div class="stat-card highlight">
+          <h4>Daily Savings</h4>
+          <p id="stat-savings" class="stat-value">$0.00</p>
+        </div>
+      </div>
+
+      <!-- Chart Container -->
+      <div class="card chart-card">
+        <h3>24-Hour Solar Production vs. Electricity Price</h3>
+        <div class="chart-wrapper">
+          <canvas id="solarChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Automated Schedule Table -->
+      <div class="card table-card">
+        <div class="table-header">
+          <h3>📋 Scheduled IoT Dispatch</h3>
+          <button id="iot-trigger-btn" class="btn btn-sm btn-outline">🚀 Trigger Live MQTT Command</button>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Solar Output</th>
+                <th>Grid Price</th>
+                <th>TOU Tier</th>
+                <th>Appliance Action</th>
+              </tr>
+            </thead>
+            <tbody id="schedule-body">
+              <!-- Populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
