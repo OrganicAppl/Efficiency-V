@@ -5,17 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SolarPeak AI - Home Energy Dispatcher</title>
   <link rel="stylesheet" href="/static/style.css">
+  
+  <!-- Add Theme Script here to prevent flicker -->
+  <script src="/static/theme.js"></script>
+  
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-  <!-- NAVBAR -->
+  <!-- NAVBAR WITH NAVIGATION BUTTONS -->
   <header class="navbar">
     <div class="logo">
       <span class="logo-icon">☀️</span>
       <h2>SolarPeak <span class="tag">AI</span></h2>
     </div>
-    <div id="location-badge" class="badge">Loading location...</div>
+    
+    <div class="nav-center">
+      <div id="location-badge" class="badge">Loading location...</div>
+    </div>
+
+    <nav class="nav-links">
+      <a href="/" class="nav-btn active">📊 Dashboard</a>
+      <a href="/settings" class="nav-btn">⚙️ Settings</a>
+    </nav>
   </header>
 
   <main class="dashboard-grid">
