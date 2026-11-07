@@ -91,6 +91,11 @@ def get_solar_production(lat, lon, panel_kwp):
 def home():
     return render_template("index.html")
 
+# Add this route right below your @app.route("/")
+@app.route("/settings")
+def settings():
+    return render_template("settings.html")
+
 @app.route("/api/optimize", methods=["POST"])
 def optimize():
     try:

@@ -343,3 +343,205 @@ th.sortable:hover {
   border-color: var(--secondary-color);
   color: var(--secondary-color);
 }
+
+/* ==========================================================================
+   DYNAMIC FONT SIZES
+   ========================================================================== */
+html[data-font-size="small"] { font-size: 14px; }
+html[data-font-size="medium"] { font-size: 16px; }
+html[data-font-size="large"] { font-size: 18px; }
+html[data-font-size="xlarge"] { font-size: 20px; }
+
+/* ==========================================================================
+   DARK THEME VARIABLES
+   ========================================================================== */
+[data-theme="dark"] {
+  --bg-color: #0b1329;            /* Deep Midnight Blue/Black */
+  --surface-color: #17223b;       /* Card Dark Background */
+  --border-color: #273553;
+  --text-main: #f1f5f9;           /* Clean Off-white */
+  --text-muted: #94a3b8;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] input, 
+[data-theme="dark"] select {
+  background-color: #0e1726;
+  color: #f1f5f9;
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .stat-card.highlight {
+  background: #064e3b;
+  border-color: #059669;
+}
+
+[data-theme="dark"] .stat-card.highlight .stat-value {
+  color: #34d399;
+}
+
+[data-theme="dark"] .device-item {
+  background-color: #0e1726;
+}
+
+[data-theme="dark"] th {
+  background-color: #131c31;
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] th.sortable:hover {
+  background-color: #1e2c4c;
+  color: var(--text-main);
+}
+
+/* ==========================================================================
+   NAVBAR LINKS & SETTINGS PAGE
+   ========================================================================== */
+.nav-links {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-btn {
+  text-decoration: none;
+  color: var(--text-muted);
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.nav-btn:hover {
+  color: var(--text-main);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .nav-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.nav-btn.active {
+  color: var(--primary-color);
+  background-color: #fef3c7;
+}
+
+[data-theme="dark"] .nav-btn.active {
+  background-color: rgba(245, 158, 11, 0.15);
+}
+
+/* Settings Container */
+.settings-container {
+  max-width: 850px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.settings-header h2 {
+  font-size: 1.6rem;
+  margin-bottom: 0.3rem;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.setting-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.setting-desc {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Theme Radio Tile Options */
+.theme-picker {
+  display: flex;
+  gap: 8px;
+}
+
+.theme-option {
+  cursor: pointer;
+}
+
+.theme-option input {
+  display: none;
+}
+
+.theme-option span {
+  display: inline-block;
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.theme-option input:checked + span {
+  border-color: var(--primary-color);
+  background-color: var(--primary-color);
+  color: white;
+}
+
+/* Color Dot Picker */
+.color-picker-row {
+  display: flex;
+  gap: 10px;
+}
+
+.color-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--surface-color);
+  outline: 2px solid var(--border-color);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.color-dot:hover {
+  transform: scale(1.15);
+}
+
+/* Font Size Buttons & Select */
+.font-size-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.select-inline {
+  width: auto;
+  min-width: 170px;
+}
+
+.settings-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.save-status {
+  font-size: 0.9rem;
+  color: var(--success);
+  font-weight: 600;
+  opacity: 0.4;
+  transition: opacity 0.3s;
+}

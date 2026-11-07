@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SolarPeak AI - Home Energy Dispatcher</title>
+  <link rel="stylesheet" href="/static/style.css">
+  
+  <!-- Add Theme Script here to prevent flicker -->
+  <script src="/static/theme.js"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- NAVBAR WITH NAVIGATION BUTTONS -->
+  <header class="navbar">
+    <div class="logo">
+      <span class="logo-icon">☀️</span>
+      <h2>SolarPeak <span class="tag">AI</span></h2>
+    </div>
+    
+    <div class="nav-center">
+      <div id="location-badge" class="badge">Loading location...</div>
+    </div>
+
+    <nav class="nav-links">
+      <a href="/" class="nav-btn active">📊 Dashboard</a>
+      <a href="/settings" class="nav-btn">⚙️ Settings</a>
+    </nav>
+  </header>
+
+  <!-- MAIN SETTINGS CONTAINER -->
+  <main class="settings-container">
+    
+    <div class="settings-header">
+      <h2>⚙️ Application Settings</h2>
+      <p class="subtitle">Customize appearance, display units, and smart home hardware connections.</p>
+    </div>
+
+    <!-- 1. APPEARANCE SETTINGS -->
+    <section class="card settings-section">
+      <h3>🎨 Appearance & Display</h3>
+      
+      <!-- Theme Selection -->
+      <div class="setting-row">
+        <div>
+          <strong>Interface Theme</strong>
+          <span class="setting-desc">Select light, dark, or sync with your operating system.</span>
+        </div>
+        <div class="theme-picker">
+          <label class="theme-option">
+            <input type="radio" name="theme-radio" value="light" onchange="updateTheme(this.value)">
+            <span>☀️ Light</span>
+          </label>
+          <label class="theme-option">
+            <input type="radio" name="theme-radio" value="dark" onchange="updateTheme(this.value)">
+            <span>🌙 Dark</span>
+          </label>
+          <label class="theme-option">
+            <input type="radio" name="theme-radio" value="auto" onchange="updateTheme(this.value)">
+            <span>💻 System</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Accent Color Selection -->
+      <div class="setting-row">
+        <div>
+          <strong>Accent Theme Color</strong>
+          <span class="setting-desc">Primary color for buttons, highlights, and solar curves.</span>
+        </div>
+        <div class="color-picker-row">
+          <button class="color-dot" style="background:#f59e0b;" onclick="updateAccent('#f59e0b')" title="Solar Gold"></button>
+          <button class="color-dot" style="background:#10b981;" onclick="updateAccent('#10b981')" title="Eco Emerald"></button>
+          <button class="color-dot" style="background:#3b82f6;" onclick="updateAccent('#3b82f6')" title="Electric Blue"></button>
+          <button class="color-dot" style="background:#8b5cf6;" onclick="updateAccent('#8b5cf6')" title="Cyber Violet"></button>
+          <button class="color-dot" style="background:#ef4444;" onclick="updateAccent('#ef4444')" title="Sunset Crimson"></button>
+        </div>
+      </div>
+
+      <!-- Text / Font Size Slider -->
+      <div class="setting-row">
+        <div>
+          <strong>Text Size</strong>
+          <span class="setting-desc">Scale UI fonts for easier readability.</span>
+        </div>
+        <div class="font-size-buttons">
+          <button class="btn btn-sm btn-outline" onclick="updateFontSize('small')">Small</button>
+          <button class="btn btn-sm btn-outline" onclick="updateFontSize('medium')">Medium (Default)</button>
+          <button class="btn btn-sm btn-outline" onclick="updateFontSize('large')">Large</button>
+          <button class="btn btn-sm btn-outline" onclick="updateFontSize('xlarge')">Extra Large</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 2. UNITS & LOCALIZATION -->
+    <section class="card settings-section">
+      <h3>🌐 Units & Regional Preferences</h3>
+
+      <div class="setting-row">
+        <div>
+          <strong>Currency Symbol</strong>
+          <span class="setting-desc">Used on tariffs, savings, and cost calculations.</span>
+        </div>
+        <select id="setting-currency" class="select-inline" onchange="saveGeneralSetting('currency', this.value)">
+          <option value="$">$ (USD / CAD / AUD)</option>
+          <option value="€">€ (Euro)</option>
+          <option value="£">£ (British Pound)</option>
+          <option value="¥">¥ (JPY / CNY)</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <strong>Time Clock Display</strong>
+          <span class="setting-desc">Format hours in 24-hour military format or 12-hour AM/PM.</span>
+        </div>
+        <select id="setting-time-format" class="select-inline" onchange="saveGeneralSetting('timeFormat', this.value)">
+          <option value="24h">24-Hour (e.g. 14:00)</option>
+          <option value="12h">12-Hour (e.g. 2:00 PM)</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- 3. HARDWARE & SOLAR MODEL CALIBRATION -->
+    <section class="card settings-section">
+      <h3>⚡ Solar System Derate & Calibration</h3>
+
+      <div class="setting-row">
+        <div>
+          <strong>Inverter / System Derate Factor (<span id="derate-display">85</span>%)</strong>
+          <span class="setting-desc">Accounts for dust, wiring losses, and inverter conversion efficiency.</span>
+        </div>
+        <div style="width: 200px;">
+          <input type="range" id="setting-derate" min="70" max="95" step="1" value="85" oninput="updateDerate(this.value)">
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. IOT & SMART HOME INTEGRATION -->
+    <section class="card settings-section">
+      <h3>🏠 Smart Home / Home Assistant Integration</h3>
+
+      <div class="form-group">
+        <label for="setting-ha-url">Home Assistant Base URL / IP</label>
+        <input type="text" id="setting-ha-url" placeholder="http://homeassistant.local:8123" onchange="saveGeneralSetting('haUrl', this.value)">
+      </div>
+
+      <div class="form-group">
+        <label for="setting-ha-token">Long-Lived Access Token (Optional)</label>
+        <input type="password" id="setting-ha-token" placeholder="Bearer eyJhbGciOi..." onchange="saveGeneralSetting('haToken', this.value)">
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <strong>Dispatch Relay Mode</strong>
+          <span class="setting-desc">Simulate triggers via alerts, or send real HTTP POST requests to Home Assistant.</span>
+        </div>
+        <select id="setting-dispatch-mode" class="select-inline" onchange="saveGeneralSetting('dispatchMode', this.value)">
+          <option value="simulated">Simulation (Browser Alerts)</option>
+          <option value="live">Live Webhook (POST to Home Assistant)</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- RESET & SAVE -->
+    <div class="settings-footer">
+      <button class="btn btn-outline" onclick="resetToDefaults()">🔄 Restore All Defaults</button>
+      <span id="save-status" class="save-status">✓ Settings auto-saved</span>
+    </div>
+
+  </main>
+
+  <script>
+    // Load current values into form elements
+    const s = getSettings();
+    document.querySelector(`input[name="theme-radio"][value="${s.theme}"]`).checked = true;
+    document.getElementById("setting-currency").value = s.currency;
+    document.getElementById("setting-time-format").value = s.timeFormat;
+    document.getElementById("setting-derate").value = s.derateFactor;
+    document.getElementById("derate-display").textContent = s.derateFactor;
+    document.getElementById("setting-ha-url").value = s.haUrl;
+    document.getElementById("setting-ha-token").value = s.haToken;
+    document.getElementById("setting-dispatch-mode").value = s.dispatchMode;
+
+    function flashSaveNotice() {
+      const msg = document.getElementById("save-status");
+      msg.style.opacity = "1";
+      setTimeout(() => msg.style.opacity = "0.4", 1500);
+    }
+
+    function saveGeneralSetting(key, val) {
+      const current = getSettings();
+      current[key] = val;
+      localStorage.setItem("solar_app_settings", JSON.stringify(current));
+      flashSaveNotice();
+    }
+
+    function updateTheme(val) {
+      saveGeneralSetting("theme", val);
+      applyVisualSettings();
+    }
+
+    function updateAccent(color) {
+      saveGeneralSetting("accentColor", color);
+      applyVisualSettings();
+    }
+
+    function updateFontSize(size) {
+      saveGeneralSetting("fontSize", size);
+      applyVisualSettings();
+    }
+
+    function updateDerate(val) {
+      document.getElementById("derate-display").textContent = val;
+      saveGeneralSetting("derateFactor", parseInt(val));
+    }
+
+    function resetToDefaults() {
+      if (confirm("Restore all settings to original factory defaults?")) {
+        localStorage.removeItem("solar_app_settings");
+        applyVisualSettings();
+        location.reload();
+      }
+    }
+  </script>
+</body>
+</html>
