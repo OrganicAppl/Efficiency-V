@@ -3,134 +3,181 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Silver Lining - Home Energy Dispatcher</title>
-  <link rel="stylesheet" href="../static/style.css">
+  <title>SolarPeak — Energy Dashboard</title>
   
-  <!-- Add Theme Script here to prevent flicker -->
-  <script src="../static/theme.js"></script>
+  <!-- Clean Modern Solar Typography: Outfit & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/theme.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-  <!-- NAVBAR WITH NAVIGATION BUTTONS -->
-  <header class="navbar">
-    <div class="logo">
-      <a href="index.html">
-      <img class="brand-logo" src="{{ url_for('brand_logo') }}" alt="">
-      <h2>Silver Lining</h2>
+  <!-- ================= CLEAN MINIMAL TOP HEADER ================= -->
+  <header class="clean-navbar">
+    <div class="nav-container">
+      
+      <!-- Brand Logo -->
+      <a href="/" class="brand-group">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2"></path>
+            <path d="M12 20v2"></path>
+            <path d="m4.93 4.93 1.41 1.41"></path>
+            <path d="m17.66 17.66 1.41 1.41"></path>
+            <path d="M2 12h2"></path>
+            <path d="M20 12h2"></path>
+            <path d="m6.34 17.66-1.41 1.41"></path>
+            <path d="m19.07 4.93-1.41 1.41"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">Solar<strong>Peak</strong></span>
+          <span class="brand-sub">Smart Dispatch</span>
+        </div>
       </a>
-    </div>
-    
-    <div class="nav-center">
-      <div id="location-badge" class="badge">Loading location...</div>
-    </div>
 
-    <nav class="nav-links">
-      <a href="/" class="nav-btn active">📊 Dashboard</a>
-      <a href="/settings" class="nav-btn">⚙️ Settings</a>
-      <form method="post" action="/logout">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <button type="submit" class="nav-btn nav-btn-action">Log out</button>
-      </form>
-    </nav>
+      <!-- Center Status Pill -->
+      <div class="nav-center-pill">
+        <span class="pulse-dot"></span>
+        <span id="location-badge">Detecting ZIP...</span>
+      </div>
+
+      <!-- Icon-Only Navigation (Home & Settings) -->
+      <nav class="nav-icon-actions">
+        <!-- Home Icon Button -->
+        <a href="/" class="icon-nav-btn active" title="Dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+        </a>
+
+        <!-- Settings Icon Button -->
+        <a href="/settings" class="icon-nav-btn" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </a>
+      </nav>
+
+    </div>
   </header>
 
-  <main class="dashboard-grid">
+  <!-- ================= SPLIT TWO-COLUMN MAIN LAYOUT ================= -->
+  <div class="lachesis-container">
     
-    <!-- LEFT SIDEBAR -->
-    <aside class="sidebar">
+    <!-- LEFT COLUMN: CONTROLS & DEVICES (STOPS SCROLLING ONCE FINISHED) -->
+    <aside class="left-sticky-column">
       
-      <!-- Location & Solar -->
-      <section class="card">
-        <h3>📍 Location & Solar Array</h3>
-        <div class="form-group">
+      <!-- Card 1: Location & Panel Array -->
+      <section class="clean-card">
+        <div class="card-head">
+          <span class="card-pill-tag">Hardware</span>
+          <h3>Array & Location</h3>
+        </div>
+
+        <div class="form-row">
           <label for="zip-code">US ZIP Code</label>
           <input type="text" id="zip-code" value="92618" maxlength="5">
         </div>
-        <div class="form-group">
-          <label for="panel-kwp">Panel Array Size: <span id="kwp-val">8.5</span> kWp</label>
+
+        <div class="form-row">
+          <div class="range-top">
+            <label for="panel-kwp">Panel Array Size</label>
+            <span class="range-badge"><strong id="kwp-val">8.5</strong> kWp</span>
+          </div>
           <input type="range" id="panel-kwp" min="1" max="25" step="0.5" value="8.5">
         </div>
       </section>
 
-      <!-- Manage Devices -->
-      <section class="card">
-        <div class="card-title-row">
-          <h3 id="form-heading">🔌 Smart Home Devices</h3>
-          <button id="cancel-edit-btn" class="btn-link" style="display: none;">Cancel Edit</button>
+      <!-- Card 2: Connected Loads & Management -->
+      <section class="clean-card">
+        <div class="card-head">
+          <span class="card-pill-tag">Loads</span>
+          <h3 id="form-heading">Smart Appliances</h3>
+          <button id="cancel-edit-btn" class="btn-cancel" style="display:none;">Cancel</button>
         </div>
-        <p class="subtitle">Add or edit heavy appliances.</p>
+        <p class="card-subtext">Add appliances to prioritize during peak solar production.</p>
 
-        <form id="device-form" class="device-inputs">
+        <form id="device-form" class="clean-device-form">
           <input type="hidden" id="editing-device-id" value="">
-          <input type="text" id="dev-name" placeholder="Device Name (e.g. EV)" required>
-          <div class="input-row">
+          <input type="text" id="dev-name" placeholder="Appliance (e.g. EV Charger)" required>
+          <div class="tri-input-row">
             <input type="number" id="dev-kw" placeholder="Power kW" step="0.1" required>
             <input type="number" id="dev-hours" placeholder="Run Hrs" min="1" max="24" required>
-            <input type="number" id="dev-deadline" placeholder="Deadline Hr (0-23)" min="1" max="24" value="20" required>
+            <input type="number" id="dev-deadline" placeholder="Deadline Hr" min="1" max="24" value="20" required>
           </div>
-          <button type="submit" id="submit-device-btn" class="btn btn-secondary">+ Add Appliance</button>
+          <button type="submit" id="submit-device-btn" class="btn-clean-add">+ Add Appliance</button>
         </form>
 
-        <ul id="device-list" class="device-list">
+        <ul id="device-list" class="device-pill-list">
           <!-- Populated by script.js -->
         </ul>
       </section>
 
-      <button id="calculate-btn" class="btn btn-primary">⚡ Optimize Schedule</button>
+      <button id="calculate-btn" class="btn-clean-primary">⚡ Optimize Daily Schedule</button>
     </aside>
 
-    <!-- RIGHT CONTENT -->
-    <section class="content">
+    <!-- RIGHT COLUMN: STATS, GRAPHS & SCHEDULE TABLE (SCROLLS FREELY) -->
+    <main class="right-scroll-column">
       
-      <!-- Metrics Row -->
-      <div class="stats-row">
-        <div class="stat-card">
-          <h4>Peak Solar</h4>
-          <p id="stat-peak" class="stat-value">0.0 kW</p>
+      <!-- Top Metrics Row -->
+      <section class="stats-row">
+        <div class="stat-tile">
+          <span class="stat-label">Peak Solar</span>
+          <span id="stat-peak" class="stat-number">0.0 kW</span>
         </div>
-        <div class="stat-card">
-          <h4>Total Solar</h4>
-          <p id="stat-total" class="stat-value">0.0 kWh</p>
+        <div class="stat-tile">
+          <span class="stat-label">Daily Forecast</span>
+          <span id="stat-total" class="stat-number">0.0 kWh</span>
         </div>
-        <div class="stat-card">
-          <h4>Run Cost</h4>
-          <p id="stat-cost" class="stat-value">$0.00</p>
+        <div class="stat-tile">
+          <span class="stat-label">Optimized Cost</span>
+          <span id="stat-cost" class="stat-number">$0.00</span>
         </div>
-        <div class="stat-card highlight">
-          <h4>Daily Savings</h4>
-          <p id="stat-savings" class="stat-value">$0.00</p>
+        <div class="stat-tile highlight">
+          <span class="stat-label">Daily Savings</span>
+          <span id="stat-savings" class="stat-number">$0.00</span>
         </div>
-      </div>
+      </section>
 
-      <!-- Chart -->
-      <div class="card chart-card">
-        <h3>24-Hour Solar Production vs. Electricity Tariff</h3>
+      <!-- Solar & Tariff Chart -->
+      <section class="clean-card chart-card">
+        <div class="card-head">
+          <span class="card-pill-tag">Telemetry</span>
+          <h3>Solar Generation vs. Grid Tariff</h3>
+        </div>
         <div class="chart-wrapper">
           <canvas id="solarChart"></canvas>
         </div>
-      </div>
+      </section>
 
-      <!-- Interactive IoT Schedule Table -->
-      <div class="card table-card">
-        <div class="table-header">
+      <!-- Automated IoT Timetable -->
+      <section class="clean-card">
+        <div class="card-head table-head-flex">
           <div>
-            <h3>📋 Scheduled IoT Dispatch</h3>
-            <span class="table-hint">💡 Click any column header to sort. Use <b>×</b> or <b>+ Add</b> to edit active hours.</span>
+            <span class="card-pill-tag">Automations</span>
+            <h3>24-Hour IoT Schedule</h3>
+            <span class="card-subtext">Click headers to sort. Click <b>×</b> or <b>+ Add</b> to override device hours.</span>
           </div>
-          <button id="iot-trigger-btn" class="btn btn-sm btn-outline">🚀 Trigger Live MQTT Command</button>
+          <button id="iot-trigger-btn" class="btn-clean-outline">Push MQTT Webhook</button>
         </div>
-        
-        <div class="table-wrapper">
+
+        <div class="table-container">
           <table id="schedule-table">
             <thead>
               <tr>
                 <th data-sort="hour" class="sortable">Time <span class="sort-indicator">▲</span></th>
                 <th data-sort="solar_kw" class="sortable">Solar Output <span class="sort-indicator"></span></th>
-                <th data-sort="grid_rate" class="sortable">Grid Price <span class="sort-indicator"></span></th>
-                <th data-sort="tier" class="sortable">TOU Tier <span class="sort-indicator"></span></th>
-                <th data-sort="actions" class="sortable">Appliance Action (Click to Edit) <span class="sort-indicator"></span></th>
+                <th data-sort="grid_rate" class="sortable">Grid Tariff <span class="sort-indicator"></span></th>
+                <th data-sort="tier" class="sortable">Tier <span class="sort-indicator"></span></th>
+                <th data-sort="actions" class="sortable">Triggered Devices <span class="sort-indicator"></span></th>
               </tr>
             </thead>
             <tbody id="schedule-body">
@@ -138,27 +185,25 @@
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
 
-    </section>
-  </main>
-  <!-- FLOATING CHATBOT WIDGET (BOTTOM RIGHT) -->
+    </main>
+  </div>
+
+  <!-- FLOATING CHAT WIDGET -->
   <div id="chat-container">
-    
-    <!-- Floating Circular Button -->
     <button id="chat-toggle-btn" class="chat-fab" title="Ask Energy AI">
       <span class="chat-icon">💬</span>
       <span class="chat-close-icon">&times;</span>
     </button>
 
-    <!-- Collapsible Chat Window -->
     <div id="chat-window" class="chat-window">
       <div class="chat-header">
         <div class="chat-header-info">
           <span class="status-dot"></span>
           <div>
             <strong>SolarBot AI</strong>
-            <small id="chat-context-badge">Live Context Loaded</small>
+            <small id="chat-context-badge">Grounding Active</small>
           </div>
         </div>
         <button id="chat-min-btn" class="chat-min-btn">&minus;</button>
@@ -166,23 +211,15 @@
 
       <div id="chat-messages" class="chat-messages">
         <div class="message bot-msg">
-          Hello! I have loaded your home's live solar forecast and electric rates. Ask me anything about your schedule!
+          Hello! I have loaded your home's solar forecast and electric rates. Ask me anything about your schedule!
         </div>
       </div>
 
       <form id="chat-form" class="chat-input-bar">
-        <input 
-          type="text" 
-          id="chat-input" 
-          placeholder="Ask about solar peak, EV, or savings..." 
-          maxlength="200" 
-          required 
-          autocomplete="off"
-        >
+        <input type="text" id="chat-input" placeholder="Ask about peak sun, EV charging..." maxlength="200" required autocomplete="off">
         <button type="submit" class="chat-send-btn">➤</button>
       </form>
     </div>
-
   </div>
 
   <script src="/static/script.js"></script>
