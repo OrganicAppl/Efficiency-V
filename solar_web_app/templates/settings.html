@@ -18,10 +18,10 @@
 
   <!-- NAVBAR WITH NAVIGATION BUTTONS -->
   <header class="navbar">
-    <div class="logo">
+    <a class="logo" href="/" aria-label="Efficiency V home">
       <img class="brand-logo" src="{{ url_for('brand_logo') }}" alt="">
       <h2>Efficiency V</h2>
-    </div>
+    </a>
 
     <nav class="nav-links">
       <a href="/" class="nav-btn active">Dashboard</a>
@@ -189,7 +189,6 @@
     <!-- RESET & SAVE -->
     <div class="settings-footer">
       <button class="btn btn-outline" onclick="resetToDefaults()">Restore All Defaults</button>
-      <span id="save-status" class="save-status">✓ Settings auto-saved</span>
     </div>
 
   </main>
@@ -210,6 +209,7 @@
 
     function flashSaveNotice() {
       const msg = document.getElementById("save-status");
+      if (!msg) return; // notice was removed from the page; nothing to flash
       msg.style.opacity = "1";
       setTimeout(() => msg.style.opacity = "0.4", 1500);
     }

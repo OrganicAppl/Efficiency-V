@@ -77,30 +77,33 @@ body {
 }
 
 .navbar .nav-btn { color: var(--nav-muted); }
-.navbar .nav-btn:hover {
-  color: #fff;
-  background-color: rgba(255, 255, 255, 0.08);
-}
+/* Hover and the current page both use the accent color (Settings > Accent),
+   with a light tint of it behind */
+.navbar .nav-btn:hover,
 .navbar .nav-btn.active {
   color: var(--primary-color);
-  background-color: rgba(245, 158, 11, 0.15);
+  background-color: rgba(245, 158, 11, 0.15); /* fallback for older browsers */
+  background-color: color-mix(in srgb, var(--primary-color) 15%, transparent);
+}
+.navbar .nav-btn.active:hover {
+  background-color: color-mix(in srgb, var(--primary-color) 25%, transparent);
 }
 
 html { scroll-behavior: smooth; }
 #dashboard { scroll-margin-top: 64px; }
 
-/* Hero banner: artwork on the left, title + blurb on the right */
+/* Hero banner: eclipse photo as the background, text centered on top */
 .hero {
   /* Fixed light-on-black colors, so it looks the same in light and dark mode */
   --hero-text: #f1f5f9;
   --hero-muted: #a3acb9;
   background-color: #000;
-  /* Eclipse photo fills the banner; the gradient keeps the text readable */
+  /* Even dark tint over the photo keeps the centered text readable */
   background-image:
-    linear-gradient(to right, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.75) 65%),
+    linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
     var(--hero-image);
   background-size: cover;
-  background-position: left center;
+  background-position: center;
   background-repeat: no-repeat;
   color: var(--hero-text);
   padding: 6rem 2rem;
@@ -110,12 +113,15 @@ html { scroll-behavior: smooth; }
   max-width: 960px;
   margin: 0 auto;
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
+  text-align: center;
 }
 
 .hero-text {
-  max-width: 460px;
+  max-width: 560px;
 }
+
+.hero-text p { margin-left: auto; margin-right: auto; }
 
 .hero-text h1 {
   font-family: var(--font-display);
@@ -154,18 +160,7 @@ html { scroll-behavior: smooth; }
 }
 
 @media (max-width: 760px) {
-  .hero {
-    padding: 4rem 16px;
-    background-image:
-      linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
-      var(--hero-image);
-    background-position: center;
-  }
-  .hero-inner {
-    justify-content: center;
-    text-align: center;
-  }
-  .hero-text p { margin-left: auto; margin-right: auto; }
+  .hero { padding: 4rem 16px; }
   .hero-text h1 { font-size: 1.5rem; }
 }
 
@@ -173,6 +168,12 @@ html { scroll-behavior: smooth; }
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* Logo is a link home: keep the plain heading look, no link color/underline */
+a.logo {
+  color: inherit;
+  text-decoration: none;
 }
 
 .brand-logo {
@@ -309,11 +310,17 @@ input[type="range"] {
 }
 
 .btn-primary { background-color: var(--primary-color); color: white; }
-.btn-primary:hover { background-color: var(--primary-hover); }
+.btn-primary:hover {
+  background-color: var(--primary-hover); /* fallback for older browsers */
+  /* A slightly darker shade of whatever accent color is chosen */
+  background-color: color-mix(in srgb, var(--primary-color) 85%, black);
+}
 .btn-secondary { background-color: #f1f5f9; color: var(--text-main); border: 1px solid var(--border-color); }
 .btn-secondary:hover { background-color: #e2e8f0; }
 .btn-sm { width: auto; padding: 6px 12px; font-size: 0.85rem; }
-.btn-outline { background: transparent; border: 1px solid var(--border-color); }
+/* Text follows the theme like the rest of the page (dark in light mode,
+   off-white in dark mode) instead of the browser's default black */
+.btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
 .btn-link { background: none; border: none; color: var(--secondary-color); cursor: pointer; font-size: 0.85rem; }
 
 /* Device List in Sidebar */
@@ -390,7 +397,7 @@ input[type="range"] {
 .stat-card.highlight .stat-value { color: var(--success); }
 
 /* Chart */
-.chart-card { height: 420px; }
+.chart-card { min-height: 420px; } /* grows when the "estimate" note shows */
 .chart-wrapper { position: relative; height: 330px; width: 100%; }
 
 /* Hover tooltips on the chart: one box per series (see splitTooltip in script.js) */
@@ -516,6 +523,43 @@ th.sortable:hover {
   color: var(--secondary-color);
 }
 
+/* The list that opens from "+ Add". appearance: base-select lets browsers that
+   support customizable selects (Chrome/Edge 135+) style it like a menu; other
+   browsers ignore it and keep their native list. */
+.inline-add-device,
+.inline-add-device::picker(select) {
+  appearance: base-select;
+}
+
+.inline-add-device::picker(select) {
+  margin-top: 4px;
+  padding: 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background-color: var(--surface-color);
+  color: var(--text-main);
+  font-family: inherit;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
+}
+
+.inline-add-device option {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.inline-add-device option:hover,
+.inline-add-device option:focus-visible {
+  background-color: rgba(59, 130, 246, 0.12);
+  color: var(--secondary-color);
+  outline: none;
+}
+
+/* No checkmark next to the selected item: picking one adds it right away */
+.inline-add-device option::checkmark { display: none; }
+
 /* ==========================================================================
    DYNAMIC FONT SIZES
    ========================================================================== */
@@ -554,6 +598,17 @@ html[data-font-size="xlarge"] { font-size: 20px; }
 
 [data-theme="dark"] .device-item {
   background-color: #171717;
+}
+/* Light-gray secondary buttons (e.g. "+ Add Appliance") need a dark fill,
+   since their text turns off-white in dark mode */
+[data-theme="dark"] .btn-secondary {
+  background-color: #2a2a2a;
+  border-color: #3f3f3f;
+  color: var(--text-main);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+  background-color: #363636;
 }
 
 [data-theme="dark"] th {
@@ -595,17 +650,21 @@ html[data-font-size="xlarge"] { font-size: 20px; }
   background-color: rgba(0, 0, 0, 0.05);
 }
 
-[data-theme="dark"] .nav-btn:hover {
-  background-color: rgba(255, 255, 255, 0.08);
+[data-theme="dark"] .nav-btn:hover,
+[data-theme="dark"] .nav-btn.active {
+  color: var(--primary-color);
+  background-color: rgba(245, 158, 11, 0.15); /* fallback for older browsers */
+  background-color: color-mix(in srgb, var(--primary-color) 15%, transparent);
 }
 
 .nav-btn.active {
   color: var(--primary-color);
-  background-color: #fef3c7;
+  background-color: #fef3c7; /* fallback for older browsers */
+  background-color: color-mix(in srgb, var(--primary-color) 15%, transparent);
 }
 
-[data-theme="dark"] .nav-btn.active {
-  background-color: rgba(245, 158, 11, 0.15);
+[data-theme="dark"] .nav-btn.active:hover {
+  background-color: color-mix(in srgb, var(--primary-color) 25%, transparent);
 }
 
 /* Settings Container */

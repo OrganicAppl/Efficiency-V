@@ -166,7 +166,7 @@ def brand_logo():
 
 @app.route("/inner-brand-logo")
 def inner_brand_logo():
-    return send_from_directory(os.path.join(app.root_path, "imgs"), "eclipse.png")
+    return send_from_directory(os.path.join(app.root_path, "imgs"), "DSC08886.jpg")
 
 
 
@@ -401,39 +401,56 @@ def get_location_from_zip(zip_code):
     fallback["city"] = f"{fallback['city']} ({clean_zip})"
     return fallback
 
-def get_solar_production(lat, lon, panel_kwp):
+def get_solar_production(lat, lon, panel_kwp, tilt=30, azimuth=0, derate=0.85):
+    """Hourly AC output for today: kWp x (sunlight on the panels / 1000 W/m^2) x derate.
+
+    tilt: panel angle from horizontal, in degrees (0 = flat).
+    azimuth: direction the panels face, Open-Meteo convention:
+             0 = south, -90 = east, 90 = west, +/-180 = north.
+    derate: share of DC output that reaches the house (inverter, wiring, soiling).
+
+    Returns (hourly rows, source), where source is "forecast" or "estimate".
+    """
     try:
+        # Sunlight on the tilted panel surface, not on flat ground: tilted panels
+        # catch much more in winter. 2 days so the last slot of today is covered.
         url = (
             f"https://api.open-meteo.com/v1/forecast?"
             f"latitude={lat}&longitude={lon}&"
-            f"hourly=shortwave_radiation,direct_normal_irradiance&"
-            f"forecast_days=1&timezone=auto"
+            f"hourly=global_tilted_irradiance&tilt={tilt}&azimuth={azimuth}&"
+            f"forecast_days=2&timezone=auto"
         )
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=4) as resp:
             data = json.loads(resp.read().decode())
 
         times = data["hourly"]["time"]
-        shortwave = data["hourly"].get("shortwave_radiation") or [0] * len(times)
+        tilted = data["hourly"]["global_tilted_irradiance"]
 
-        hourly_kw = []
-        for i, t_str in enumerate(times[:24]):
-            dt = datetime.fromisoformat(t_str)
-            irr = shortwave[i] if i < len(shortwave) else 0.0
-            kw = max(0.0, round(panel_kwp * (irr / 1000.0) * 0.85, 2))
-            hourly_kw.append({"hour": dt.hour, "time_label": f"{dt.hour:02d}:00", "solar_kw": kw})
-        return hourly_kw
-
-    except Exception:
+        # Open-Meteo values are the average of the PRECEDING hour (the 13:00 value
+        # covers 12:00-13:00). Each row here is the slot that starts at that hour,
+        # so slot h (h:00-h+1:00) takes the value stamped h+1.
         hourly_kw = []
         for h in range(24):
-            if 6 <= h <= 18:
-                sun_pct = math.sin((h - 6) / 12.0 * math.pi)
-                kw = round(panel_kwp * 0.82 * sun_pct, 2)
+            dt = datetime.fromisoformat(times[h])
+            irr = tilted[h + 1] or 0.0
+            kw = max(0.0, round(panel_kwp * (irr / 1000.0) * derate, 2))
+            hourly_kw.append({"hour": dt.hour, "time_label": f"{dt.hour:02d}:00", "solar_kw": kw})
+        return hourly_kw, "forecast"
+
+    except Exception:
+        # Weather service unavailable: a generic clear-day curve so the app still
+        # works. It ignores season, location and clouds, so the UI labels it.
+        hourly_kw = []
+        for h in range(24):
+            mid = h + 0.5  # middle of the slot
+            if 6 <= mid <= 18:
+                sun_pct = math.sin((mid - 6) / 12.0 * math.pi)
+                kw = round(panel_kwp * derate * sun_pct, 2)
             else:
                 kw = 0.0
             hourly_kw.append({"hour": h, "time_label": f"{h:02d}:00", "solar_kw": kw})
-        return hourly_kw
+        return hourly_kw, "estimate"
 
 @app.route("/")
 @login_required
@@ -555,6 +572,10 @@ def optimize():
         body = request.get_json(force=True) or {}
         zip_code = str(body.get("zip_code", "90210"))
         panel_kwp = float(body.get("panel_kwp", 8.5))
+        # Clamp to physically sensible ranges
+        panel_tilt = min(90.0, max(0.0, float(body.get("panel_tilt", 30))))
+        panel_azimuth = min(180.0, max(-180.0, float(body.get("panel_azimuth", 0))))
+        derate = min(1.0, max(0.5, float(body.get("derate", 0.85))))
         devices = body.get("devices", [])
 
         loc = get_location_from_zip(zip_code)
@@ -566,7 +587,9 @@ def optimize():
         peak_start = int(body.get("peak_start", state_cfg["peak_start"]))
         peak_end = int(body.get("peak_end", state_cfg["peak_end"]))
 
-        solar_data = get_solar_production(loc["lat"], loc["lon"], panel_kwp)
+        solar_data, solar_source = get_solar_production(
+            loc["lat"], loc["lon"], panel_kwp, panel_tilt, panel_azimuth, derate
+        )
 
         for row in solar_data:
             h = row["hour"]
@@ -610,6 +633,7 @@ def optimize():
             "success": True,
             "location": loc,
             "utility": state_cfg["utility"],
+            "solar_source": solar_source,
             "tariffs": {
                 "peak_rate": peak_rate,
                 "off_rate": off_rate,

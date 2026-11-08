@@ -23,7 +23,16 @@ const formHeading = document.getElementById("form-heading");
 const calculateBtn = document.getElementById("calculate-btn");
 const iotTriggerBtn = document.getElementById("iot-trigger-btn");
 
+const tiltInput = document.getElementById("panel-tilt");
+const tiltVal = document.getElementById("tilt-val");
+const azimuthInput = document.getElementById("panel-azimuth");
+
 panelInput.addEventListener("input", (e) => kwpVal.textContent = e.target.value);
+tiltInput.addEventListener("input", (e) => tiltVal.textContent = e.target.value);
+// Re-run the forecast when a panel setting changes, so the graph matches it
+panelInput.addEventListener("change", fetchOptimization);
+tiltInput.addEventListener("change", fetchOptimization);
+azimuthInput.addEventListener("change", fetchOptimization);
 
 // --- 1. DEVICE CRUD & EDITING ---
 function renderDeviceList() {
@@ -113,6 +122,7 @@ deviceForm.addEventListener("submit", (e) => {
 async function fetchOptimization() {
   calculateBtn.textContent = "Calculating...";
   calculateBtn.disabled = true;
+  const panelKwp = parseFloat(panelInput.value);
 
   try {
     const response = await fetch("/api/optimize", {
@@ -120,7 +130,10 @@ async function fetchOptimization() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         zip_code: zipInput.value.trim(),
-        panel_kwp: parseFloat(panelInput.value),
+        panel_kwp: panelKwp,
+        panel_tilt: parseFloat(tiltInput.value),
+        panel_azimuth: parseFloat(azimuthInput.value),
+        derate: getSettings().derateFactor / 100, // Settings page stores a percent
         devices: devices
       })
     });
@@ -132,6 +145,7 @@ async function fetchOptimization() {
 
     cachedHourlyData = data.hourly;
     cachedTariffs = data.tariffs;
+    document.getElementById("solar-source-note").hidden = data.solar_source !== "estimate";
 
     document.getElementById("location-badge").textContent = `${data.location.city}, ${data.location.state} (${data.utility})`;
     document.getElementById("stat-peak").textContent = `${data.summary.peak_solar_kw} kW`;
@@ -139,7 +153,7 @@ async function fetchOptimization() {
     document.getElementById("stat-cost").textContent = `$${data.summary.optimized_cost}`;
     document.getElementById("stat-savings").textContent = `$${data.summary.savings}`;
 
-    renderChart(cachedHourlyData);
+    renderChart(cachedHourlyData, panelKwp);
     renderTable();
 
   } catch (err) {
@@ -265,7 +279,7 @@ function renderTable() {
     const optionsHtml = availableDevices.map(d => `<option value="${d.name}">${d.name}</option>`).join("");
     const addDropdown = `
       <select class="inline-add-device" onchange="addActionToHour(${row.hour}, this)">
-        <option value="">+ Add to ${row.time_label}</option>
+        <option value="" selected hidden>+ Add to ${row.time_label}</option>
         ${optionsHtml}
       </select>
     `;
@@ -287,7 +301,8 @@ function renderTable() {
 }
 
 // --- 6. CHART.JS ---
-function renderChart(hourlyData) {
+// panelKwp: the array size used for this forecast; the solar axis tops out there
+function renderChart(hourlyData, panelKwp) {
   const ctx = document.getElementById("solarChart").getContext("2d");
   if (chartInstance) chartInstance.destroy();
 
@@ -380,6 +395,9 @@ function renderChart(hourlyData) {
           type: "linear",
           position: "left",
           beginAtZero: true,
+          // Top of the axis = array size, so the curve reads as a share of capacity
+          // (suggestedMax still lets the axis grow if a value ever goes above it)
+          suggestedMax: panelKwp,
           border: { display: false, dash: [6, 6] }, // v4: dashed grid lines
           grid: { color: gridColor, drawTicks: false },
           ticks: { color: mutedText, padding: 10, callback: v => `${v} kW` }
