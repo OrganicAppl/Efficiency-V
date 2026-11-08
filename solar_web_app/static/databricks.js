@@ -1,14 +1,30 @@
 const authForms = document.querySelectorAll("[data-auth-form]");
+const authTabs = Array.from(document.querySelectorAll("[data-auth-tab]"));
 
-document.querySelector("[data-show-register]")?.addEventListener("click", () => {
-  document.querySelector("#login-panel").hidden = true;
-  document.querySelector("#register-panel").hidden = false;
-});
+function selectAuthTab(tab, focus = false) {
+  for (const other of authTabs) {
+    const selected = other === tab;
+    other.setAttribute("aria-selected", String(selected));
+    other.tabIndex = selected ? 0 : -1;
+    document.getElementById(other.getAttribute("aria-controls")).hidden = !selected;
+  }
+  if (focus) tab.focus();
+}
 
-document.querySelector("[data-show-login]")?.addEventListener("click", () => {
-  document.querySelector("#register-panel").hidden = true;
-  document.querySelector("#login-panel").hidden = false;
-});
+for (const tab of authTabs) {
+  tab.addEventListener("click", () => selectAuthTab(tab));
+  tab.addEventListener("keydown", (event) => {
+    const index = authTabs.indexOf(tab);
+    let next = null;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") next = authTabs[(index + 1) % authTabs.length];
+    if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = authTabs[(index - 1 + authTabs.length) % authTabs.length];
+    if (event.key === "Home") next = authTabs[0];
+    if (event.key === "End") next = authTabs[authTabs.length - 1];
+    if (!next) return;
+    event.preventDefault();
+    selectAuthTab(next, true);
+  });
+}
 
 for (const form of authForms) {
   const message = form.querySelector('[role="alert"]');

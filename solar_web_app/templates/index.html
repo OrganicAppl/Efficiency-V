@@ -41,6 +41,10 @@
   <section class="hero" style="--hero-image: url('{{ url_for('inner_brand_logo') }}');">
     <div class="hero-inner">
       <div class="hero-text">
+        <p class="hero-location">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 17.5s5.5-5 5.5-9.25a5.5 5.5 0 0 0-11 0C4.5 12.5 10 17.5 10 17.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="10" cy="8.25" r="2" fill="currentColor"/></svg>
+          <span id="hero-location-text">Locating&hellip;</span>
+        </p>
         <h1>Every hour<br>of sun counts</h1>
         <p>
           Tell us where your panels live and what you need to run. We'll line up
@@ -51,90 +55,98 @@
     </div>
   </section>
 
-  <main class="dashboard-grid" id="dashboard">
+  <main class="dashboard-grid is-empty" id="dashboard">
     
     <!-- LEFT SIDEBAR -->
     <aside class="sidebar">
-      
-      <!-- Location & Solar -->
+
       <section class="card">
-        <h3>Location & Solar Array</h3>
+        <h3 class="card-heading">Location &amp; Solar Array</h3>
         <div class="form-group">
           <label for="zip-code">US ZIP Code</label>
-          <input type="text" id="zip-code" value="92618" maxlength="5">
+          <input type="text" id="zip-code" value="92618" maxlength="5" inputmode="numeric" autocomplete="postal-code">
         </div>
         <div class="form-group">
-          <label for="panel-kwp">Panel Array Size: <span id="kwp-val">8.5</span> kWp</label>
-          <input type="range" id="panel-kwp" min="1" max="25" step="0.5" value="8.5">
+          <div class="range-head">
+            <label for="panel-kwp">Array Size</label>
+            <span class="range-value"><span id="kwp-val">8.5</span> kWp</span>
+          </div>
+          <input type="range" class="range-input" id="panel-kwp" min="1" max="25" step="0.5" value="8.5">
+          <div class="range-scale" aria-hidden="true"><span>1</span><span>25 kWp</span></div>
         </div>
         <div class="form-group">
-          <label for="panel-tilt">Panel Tilt: <span id="tilt-val">30</span>&deg;</label>
-          <input type="range" id="panel-tilt" min="0" max="60" step="5" value="30">
+          <div class="range-head">
+            <label for="panel-tilt">Panel Tilt</label>
+            <span class="range-value"><span id="tilt-val">30</span>&deg;</span>
+          </div>
+          <input type="range" class="range-input" id="panel-tilt" min="0" max="60" step="5" value="30">
+          <div class="range-scale" aria-hidden="true"><span>Flat</span><span>60&deg;</span></div>
         </div>
-        <div class="form-group">
-          <label for="panel-azimuth">Panels Face</label>
-          <!-- Values use Open-Meteo's convention: 0 = south, -90 = east, 90 = west -->
-          <select id="panel-azimuth">
-            <option value="0" selected>South</option>
-            <option value="-45">Southeast</option>
-            <option value="45">Southwest</option>
-            <option value="-90">East</option>
-            <option value="90">West</option>
-          </select>
+        <div class="form-group form-group-last">
+          <label id="azimuth-label" for="azimuth-trigger">Panels Face</label>
+          <div class="cselect">
+            <select id="panel-azimuth" class="cselect-native" tabindex="-1" aria-hidden="true">
+              <option value="0" selected>South</option>
+              <option value="-45">Southeast</option>
+              <option value="45">Southwest</option>
+              <option value="-90">East</option>
+              <option value="90">West</option>
+            </select>
+            <button type="button" id="azimuth-trigger" class="cselect-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="azimuth-listbox" aria-labelledby="azimuth-label azimuth-value">
+              <span id="azimuth-value" class="cselect-value">South</span>
+              <svg class="cselect-chevron" viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 7.5 10 12l4.5-4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <ul id="azimuth-listbox" class="popover-menu cselect-menu" role="listbox" aria-labelledby="azimuth-label" tabindex="-1" hidden></ul>
+          </div>
         </div>
       </section>
 
-      <!-- Manage Devices -->
       <section class="card">
         <div class="card-title-row">
-          <h3 id="form-heading">Smart Home Devices</h3>
-          <button id="cancel-edit-btn" class="btn-link" style="display: none;">Cancel Edit</button>
-        </div>
-        <p class="subtitle">Add or edit heavy appliances.</p>
-
-        <form id="device-form" class="device-inputs">
-          <input type="hidden" id="editing-device-id" value="">
-          <input type="text" id="dev-name" placeholder="Device Name (e.g. EV)" required>
-          <div class="input-row">
-            <input type="number" id="dev-kw" placeholder="Power kW" step="0.1" required>
-            <input type="number" id="dev-hours" placeholder="Run Hrs" min="1" max="24" required>
-            <input type="number" id="dev-deadline" placeholder="Deadline Hr (0-23)" min="1" max="24" value="20" required>
+          <div>
+            <h3>Smart Home Devices</h3>
+            <p class="subtitle">Heavy loads, timed to the sun.</p>
           </div>
-          <button type="submit" id="submit-device-btn" class="btn btn-secondary">+ Add Appliance</button>
-        </form>
+          <span id="device-count" class="count-badge" aria-label="Number of appliances">0</span>
+        </div>
 
-        <ul id="device-list" class="device-list">
-          <!-- Populated by script.js -->
-        </ul>
+        <ul id="device-list" class="device-list"></ul>
+        <p id="device-empty" class="device-empty" hidden>No appliances yet. Add one to start scheduling.</p>
+
+        <button type="button" id="add-device-btn" class="btn btn-secondary btn-add">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4.5v11M4.5 10h11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Add Appliance
+        </button>
       </section>
 
       <button id="calculate-btn" class="btn btn-primary">Optimize Schedule</button>
     </aside>
 
-    <!-- RIGHT CONTENT -->
     <section class="content">
-      
-      <!-- Metrics Row -->
+
       <div class="stats-row">
         <div class="stat-card">
           <h4>Peak Solar</h4>
-          <p id="stat-peak" class="stat-value">0.0 kW</p>
+          <p id="stat-peak" class="stat-value">&mdash;</p>
+          <p id="stat-peak-sub" class="stat-sub">Awaiting forecast</p>
         </div>
         <div class="stat-card">
           <h4>Total Solar</h4>
-          <p id="stat-total" class="stat-value">0.0 kWh</p>
+          <p id="stat-total" class="stat-value">&mdash;</p>
+          <p id="stat-total-sub" class="stat-sub">Awaiting forecast</p>
         </div>
         <div class="stat-card">
           <h4>Run Cost</h4>
-          <p id="stat-cost" class="stat-value">$0.00</p>
+          <p id="stat-cost" class="stat-value">&mdash;</p>
+          <p id="stat-cost-sub" class="stat-sub">Awaiting schedule</p>
         </div>
         <div class="stat-card highlight">
           <h4>Daily Savings</h4>
-          <p id="stat-savings" class="stat-value">$0.00</p>
+          <p id="stat-savings" class="stat-value">&mdash;</p>
+          <p id="stat-savings-sub" class="stat-sub">Awaiting schedule</p>
         </div>
       </div>
 
-      <!-- Chart -->
       <div class="card chart-card">
         <h3>24-Hour Solar Production vs. Electricity Tariff</h3>
         <p id="solar-source-note" class="table-hint" hidden>
@@ -145,12 +157,11 @@
         </div>
       </div>
 
-      <!-- Interactive IoT Schedule Table -->
       <div class="card table-card">
         <div class="table-header">
           <div>
             <h3>Scheduled IoT Dispatch</h3>
-            <span class="table-hint">Click any column header to sort. Use <b>×</b> or <b>+ Add</b> to edit active hours.</span>
+            <span class="table-hint">Sort by any column. Use <b>+</b> to add an appliance to an hour, <b>&times;</b> to remove it.</span>
           </div>
           <button id="iot-trigger-btn" class="btn btn-sm btn-outline">Trigger Live MQTT Command</button>
         </div>
@@ -163,11 +174,18 @@
                 <th data-sort="solar_kw" class="sortable">Solar Output <span class="sort-indicator"></span></th>
                 <th data-sort="grid_rate" class="sortable">Grid Price <span class="sort-indicator"></span></th>
                 <th data-sort="tier" class="sortable">TOU Tier <span class="sort-indicator"></span></th>
-                <th data-sort="actions" class="sortable">Appliance Action (Click to Edit) <span class="sort-indicator"></span></th>
+                <th data-sort="actions" class="sortable">Appliances <span class="sort-indicator"></span></th>
               </tr>
             </thead>
             <tbody id="schedule-body">
-              <!-- Populated by script.js -->
+              <tr class="schedule-empty-row">
+                <td colspan="5">
+                  <div class="schedule-empty">
+                    <p class="schedule-empty-title">No schedule yet</p>
+                    <p>Once optimized, each hour shows which appliances run and what power costs.</p>
+                  </div>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -175,6 +193,64 @@
 
     </section>
   </main>
+
+  <div id="add-menu" class="popover-menu add-menu" role="menu" aria-label="Add appliance" hidden></div>
+
+  <dialog id="device-modal" class="modal" aria-labelledby="device-modal-title" aria-describedby="device-modal-desc">
+    <form id="device-form" class="modal-panel" novalidate>
+      <div class="modal-grabber" aria-hidden="true"></div>
+      <div class="modal-head">
+        <div>
+          <h3 id="device-modal-title">Add appliance</h3>
+          <p id="device-modal-desc" class="subtitle">We&rsquo;ll fit its run time into the sunniest, cheapest hours before the deadline.</p>
+        </div>
+        <button type="button" class="icon-btn modal-close" data-close aria-label="Close">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <input type="hidden" id="editing-device-id" value="">
+
+      <div class="field">
+        <label for="dev-name">Name</label>
+        <input type="text" id="dev-name" placeholder="e.g. EV charger" maxlength="40" autocomplete="off" aria-describedby="dev-name-err">
+        <p class="field-error" id="dev-name-err" aria-live="polite"></p>
+      </div>
+
+      <div class="field-grid">
+        <div class="field">
+          <label for="dev-kw">Power</label>
+          <div class="input-unit">
+            <input type="number" id="dev-kw" placeholder="7.2" step="0.1" min="0.1" max="50" inputmode="decimal" aria-describedby="dev-kw-err">
+            <span class="unit">kW</span>
+          </div>
+          <p class="field-error" id="dev-kw-err" aria-live="polite"></p>
+        </div>
+        <div class="field">
+          <label for="dev-hours">Run time</label>
+          <div class="input-unit">
+            <input type="number" id="dev-hours" placeholder="3" step="1" min="1" max="24" inputmode="numeric" aria-describedby="dev-hours-err">
+            <span class="unit">h</span>
+          </div>
+          <p class="field-error" id="dev-hours-err" aria-live="polite"></p>
+        </div>
+        <div class="field">
+          <label for="dev-deadline">Done by</label>
+          <div class="input-unit">
+            <input type="number" id="dev-deadline" placeholder="20" step="1" min="1" max="24" inputmode="numeric" aria-describedby="dev-deadline-err">
+            <span class="unit">:00</span>
+          </div>
+          <p class="field-error" id="dev-deadline-err" aria-live="polite"></p>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" data-close>Cancel</button>
+        <button type="submit" id="device-modal-save" class="btn btn-primary">Add appliance</button>
+      </div>
+    </form>
+  </dialog>
+
   <!-- FLOATING CHATBOT WIDGET (BOTTOM RIGHT) -->
   <div id="chat-container">
     

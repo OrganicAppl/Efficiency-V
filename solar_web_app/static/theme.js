@@ -1,6 +1,6 @@
 // Default Settings
 const DEFAULT_SETTINGS = {
-  theme: "light",          // 'light' | 'dark' | 'auto'
+  theme: "dark",           // 'light' | 'dark' | 'auto'
   fontSize: "medium",      // 'small' | 'medium' | 'large' | 'xlarge'
   accentColor: "#f59e0b",  // default Solar Gold
   chartSolarColor: "#6366f1",   // dashboard graph: solar production line

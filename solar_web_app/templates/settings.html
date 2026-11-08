@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Silver Lining - Home Energy Dispatcher</title>
+  <title>EfficiencyV - Home Energy Dispatcher</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Lora:wght@400;500;600;700&display=swap">
@@ -24,8 +24,8 @@
     </a>
 
     <nav class="nav-links">
-      <a href="/" class="nav-btn active">Dashboard</a>
-      <a href="/settings" class="nav-btn">Settings</a>
+      <a href="/" class="nav-btn">Dashboard</a>
+      <a href="/settings" class="nav-btn active">Settings</a>
       <form method="post" action="/logout">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <button type="submit" class="nav-btn nav-btn-action">Log out</button>
@@ -154,7 +154,7 @@
           <strong>Inverter / System Derate Factor (<span id="derate-display">85</span>%)</strong>
           <span class="setting-desc">Accounts for dust, wiring losses, and inverter conversion efficiency.</span>
         </div>
-        <div style="width: 200px;">
+        <div class="derate-control">
           <input type="range" id="setting-derate" min="70" max="95" step="1" value="85" oninput="updateDerate(this.value)">
         </div>
       </div>

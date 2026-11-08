@@ -3,31 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Silver Lining - Log In</title>
+  <title>Efficiency V - Log In</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Lora:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="../static/style.css">
+  <link rel="stylesheet" href="../static/login.css">
   <script src="../static/theme.js"></script>
 </head>
-<body>
-  <header class="navbar">
-    <div class="logo">
-      <img class="brand-logo" src="{{ url_for('brand_logo') }}" alt="">
-      <h2>Efficiency V</h2>
+<body class="auth-page">
+  <main class="auth-shell">
+    <div class="auth-brand">
+      <img class="auth-logo" src="{{ url_for('brand_logo') }}" alt="" width="88" height="88">
+      <p class="auth-wordmark">Efficiency V</p>
     </div>
-  </header>
 
-  <main style="max-width: 480px; margin: 4rem auto; padding: 0 1rem;">
-    <section class="card">
-      <div id="login-panel">
-        <h1>Welcome back</h1>
-        <p class="subtitle" style="margin-top: 0.5rem;">Log in to manage your home energy.</p>
+    <section class="auth-card" aria-label="Account access">
+      <div class="auth-tabs" role="tablist" aria-label="Choose an option">
+        <button type="button" class="auth-tab" role="tab" id="login-tab" aria-controls="login-panel" aria-selected="true" tabindex="0" data-auth-tab="login">Log in</button>
+        <button type="button" class="auth-tab" role="tab" id="register-tab" aria-controls="register-panel" aria-selected="false" tabindex="-1" data-auth-tab="register">Register</button>
+      </div>
+
+      <div id="login-panel" class="auth-panel" role="tabpanel" aria-labelledby="login-tab">
         <form id="login-form" method="post" action="/login" data-auth-form>
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <p id="login-message" class="subtitle" role="alert" aria-live="polite"></p>
-          <div class="form-group">
-            <label for="username">Email address</label>
+          <div class="auth-field">
+            <label for="username">Email</label>
             <input
               type="email"
               id="username"
@@ -37,7 +38,7 @@
               required
             >
           </div>
-          <div class="form-group">
+          <div class="auth-field">
             <label for="password">Password</label>
             <input
               type="password"
@@ -48,21 +49,16 @@
               required
             >
           </div>
-          <button type="submit" class="btn btn-primary">Log In</button>
+          <p id="login-message" class="auth-message" role="alert" aria-live="polite"></p>
+          <button type="submit" class="auth-submit">Log in</button>
         </form>
-        <p class="subtitle" style="margin-top: 1rem; text-align: center;">
-          New here? <button type="button" class="btn-link" data-show-register>Create an account</button>
-        </p>
       </div>
 
-      <div id="register-panel" hidden>
-        <h1>Create your account</h1>
-        <p class="subtitle" style="margin-top: 0.5rem;">Use your email address and create a password.</p>
+      <div id="register-panel" class="auth-panel" role="tabpanel" aria-labelledby="register-tab" hidden>
         <form id="register-form" method="post" action="/register" data-auth-form>
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <p id="register-message" class="subtitle" role="alert" aria-live="polite"></p>
-          <div class="form-group">
-            <label for="register-username">Email address</label>
+          <div class="auth-field">
+            <label for="register-username">Email</label>
             <input
               type="email"
               id="register-username"
@@ -72,33 +68,35 @@
               required
             >
           </div>
-          <div class="form-group">
-            <label for="register-password">Password (at least 12 characters)</label>
+          <div class="auth-field">
+            <label for="register-password">Password</label>
             <input
               type="password"
               id="register-password"
               name="password"
               autocomplete="new-password"
+              placeholder="Create a password"
+              aria-describedby="register-password-hint"
               minlength="12"
               required
             >
+            <span id="register-password-hint" class="auth-hint">Use 12 or more characters.</span>
           </div>
-          <div class="form-group">
+          <div class="auth-field">
             <label for="confirm-password">Confirm password</label>
             <input
               type="password"
               id="confirm-password"
               name="confirm_password"
               autocomplete="new-password"
+              placeholder="Repeat your password"
               minlength="12"
               required
             >
           </div>
-          <button type="submit" class="btn btn-primary">Create Account</button>
+          <p id="register-message" class="auth-message" role="alert" aria-live="polite"></p>
+          <button type="submit" class="auth-submit">Create account</button>
         </form>
-        <p class="subtitle" style="margin-top: 1rem; text-align: center;">
-          Already have an account? <button type="button" class="btn-link" data-show-login>Log in</button>
-        </p>
       </div>
     </section>
   </main>
