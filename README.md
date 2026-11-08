@@ -26,7 +26,7 @@ In PowerShell, change to the repository folder and install the Flask app's
 dependencies:
 
 ```powershell
-cd C:\Users\Angelina\Documents\GitHub\Silver-Lining
+cd C:\Users\name\Documents\GitHub\Silver-Lining
 python -m pip install Flask requests python-dotenv
 ```
 
