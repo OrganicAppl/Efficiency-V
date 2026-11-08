@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Silver Lining - Home Energy Dispatcher</title>
+  <title>EfficiencyV - Home Energy Dispatcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Lora:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="../static/style.css">
   
   <!-- Add Theme Script here to prevent flicker -->
@@ -17,7 +20,7 @@
   <header class="navbar">
     <div class="logo">
       <img class="brand-logo" src="{{ url_for('brand_logo') }}" alt="">
-      <h2>Silver Lining</h2>
+      <h2>EfficiencyV</h2>
     </div>
     
     <div class="nav-center">
@@ -25,8 +28,8 @@
     </div>
 
     <nav class="nav-links">
-      <a href="/" class="nav-btn active">📊 Dashboard</a>
-      <a href="/settings" class="nav-btn">⚙️ Settings</a>
+      <a href="/" class="nav-btn active">Dashboard</a>
+      <a href="/settings" class="nav-btn">Settings</a>
       <form method="post" action="/logout">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <button type="submit" class="nav-btn nav-btn-action">Log out</button>
@@ -37,9 +40,9 @@
   <!-- HERO BANNER (scrolls away; the slim bar above stays pinned) -->
   <section class="hero">
     <div class="hero-inner">
-      <img class="hero-art" src="{{ url_for('brand_logo') }}" alt="Silver Lining artwork">
+      <img class="hero-art" src="{{ url_for('inner_brand_logo') }}" alt="EfficiencyV artwork">
       <div class="hero-text">
-        <h1>Every cloud<br>has a silver lining</h1>
+        <h1>Every cloud<br>has a EfficiencyV</h1>
         <p>
           Tell us where your panels live and what you need to run. We'll line up
           your heaviest appliances with the sunniest, cheapest hours of the day.
@@ -56,7 +59,7 @@
       
       <!-- Location & Solar -->
       <section class="card">
-        <h3>📍 Location & Solar Array</h3>
+        <h3>Location & Solar Array</h3>
         <div class="form-group">
           <label for="zip-code">US ZIP Code</label>
           <input type="text" id="zip-code" value="92618" maxlength="5">
@@ -70,7 +73,7 @@
       <!-- Manage Devices -->
       <section class="card">
         <div class="card-title-row">
-          <h3 id="form-heading">🔌 Smart Home Devices</h3>
+          <h3 id="form-heading">Smart Home Devices</h3>
           <button id="cancel-edit-btn" class="btn-link" style="display: none;">Cancel Edit</button>
         </div>
         <p class="subtitle">Add or edit heavy appliances.</p>
@@ -129,8 +132,8 @@
       <div class="card table-card">
         <div class="table-header">
           <div>
-            <h3>📋 Scheduled IoT Dispatch</h3>
-            <span class="table-hint">💡 Click any column header to sort. Use <b>×</b> or <b>+ Add</b> to edit active hours.</span>
+            <h3>Scheduled IoT Dispatch</h3>
+            <span class="table-hint">Click any column header to sort. Use <b>×</b> or <b>+ Add</b> to edit active hours.</span>
           </div>
           <button id="iot-trigger-btn" class="btn btn-sm btn-outline">🚀 Trigger Live MQTT Command</button>
         </div>

@@ -3,6 +3,8 @@ const DEFAULT_SETTINGS = {
   theme: "light",          // 'light' | 'dark' | 'auto'
   fontSize: "medium",      // 'small' | 'medium' | 'large' | 'xlarge'
   accentColor: "#f59e0b",  // default Solar Gold
+  chartSolarColor: "#6366f1",   // dashboard graph: solar production line
+  chartTariffColor: "#e0a3e6",  // dashboard graph: electricity price line
   currency: "$",
   timeFormat: "24h",       // '24h' | '12h'
   derateFactor: 85,        // 85% efficiency

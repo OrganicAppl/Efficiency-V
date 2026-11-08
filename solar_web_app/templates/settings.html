@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Silver Lining - Home Energy Dispatcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Lora:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="/static/style.css">
   
   <!-- Add Theme Script here to prevent flicker -->
@@ -25,8 +28,8 @@
     </div>
 
     <nav class="nav-links">
-      <a href="/" class="nav-btn active">📊 Dashboard</a>
-      <a href="/settings" class="nav-btn">⚙️ Settings</a>
+      <a href="/" class="nav-btn active">Dashboard</a>
+      <a href="/settings" class="nav-btn">Settings</a>
       <form method="post" action="/logout">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <button type="submit" class="nav-btn nav-btn-action">Log out</button>
@@ -38,13 +41,13 @@
   <main class="settings-container">
     
     <div class="settings-header">
-      <h2>⚙️ Application Settings</h2>
+      <h2>Application Settings</h2>
       <p class="subtitle">Customize appearance, display units, and smart home hardware connections.</p>
     </div>
 
     <!-- 1. APPEARANCE SETTINGS -->
     <section class="card settings-section">
-      <h3>🎨 Appearance & Display</h3>
+      <h3>Appearance & Display</h3>
       
       <!-- Theme Selection -->
       <div class="setting-row">
@@ -55,15 +58,15 @@
         <div class="theme-picker">
           <label class="theme-option">
             <input type="radio" name="theme-radio" value="light" onchange="updateTheme(this.value)">
-            <span>☀️ Light</span>
+            <span>Light</span>
           </label>
           <label class="theme-option">
             <input type="radio" name="theme-radio" value="dark" onchange="updateTheme(this.value)">
-            <span>🌙 Dark</span>
+            <span>Dark</span>
           </label>
           <label class="theme-option">
             <input type="radio" name="theme-radio" value="auto" onchange="updateTheme(this.value)">
-            <span>💻 System</span>
+            <span>System</span>
           </label>
         </div>
       </div>
@@ -80,6 +83,24 @@
           <button class="color-dot" style="background:#3b82f6;" onclick="updateAccent('#3b82f6')" title="Electric Blue"></button>
           <button class="color-dot" style="background:#8b5cf6;" onclick="updateAccent('#8b5cf6')" title="Cyber Violet"></button>
           <button class="color-dot" style="background:#ef4444;" onclick="updateAccent('#ef4444')" title="Sunset Crimson"></button>
+        </div>
+      </div>
+
+      <!-- Dashboard Graph Colors -->
+      <div class="setting-row">
+        <div>
+          <strong>Graph Colors</strong>
+          <span class="setting-desc">Line and fill colors for the 24-hour solar vs. tariff graph.</span>
+        </div>
+        <div class="graph-color-pickers">
+          <label class="graph-color-option">
+            <input type="color" id="setting-chart-solar" onchange="saveGeneralSetting('chartSolarColor', this.value)">
+            <span>Solar output</span>
+          </label>
+          <label class="graph-color-option">
+            <input type="color" id="setting-chart-tariff" onchange="saveGeneralSetting('chartTariffColor', this.value)">
+            <span>Grid price</span>
+          </label>
         </div>
       </div>
 
@@ -101,7 +122,7 @@
 
     <!-- 2. UNITS & LOCALIZATION -->
     <section class="card settings-section">
-      <h3>🌐 Units & Regional Preferences</h3>
+      <h3>Units & Regional Preferences</h3>
 
       <div class="setting-row">
         <div>
@@ -130,7 +151,7 @@
 
     <!-- 3. HARDWARE & SOLAR MODEL CALIBRATION -->
     <section class="card settings-section">
-      <h3>⚡ Solar System Derate & Calibration</h3>
+      <h3>Solar System Derate & Calibration</h3>
 
       <div class="setting-row">
         <div>
@@ -145,7 +166,7 @@
 
     <!-- 4. IOT & SMART HOME INTEGRATION -->
     <section class="card settings-section">
-      <h3>🏠 Smart Home / Home Assistant Integration</h3>
+      <h3>Smart Home / Home Assistant Integration</h3>
 
       <div class="form-group">
         <label for="setting-ha-url">Home Assistant Base URL / IP</label>
@@ -188,6 +209,8 @@
     document.getElementById("setting-ha-url").value = s.haUrl;
     document.getElementById("setting-ha-token").value = s.haToken;
     document.getElementById("setting-dispatch-mode").value = s.dispatchMode;
+    document.getElementById("setting-chart-solar").value = s.chartSolarColor;
+    document.getElementById("setting-chart-tariff").value = s.chartTariffColor;
 
     function flashSaveNotice() {
       const msg = document.getElementById("save-status");

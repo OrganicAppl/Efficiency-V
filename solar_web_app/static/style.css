@@ -12,16 +12,35 @@
   --danger: #ef4444;
   --radius: 12px;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  /* Display serif for headings (matches the hero), readable serif for body */
+  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-body: "Lora", Georgia, "Times New Roman", serif;
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-body);
   font-optical-sizing: auto;
   font-weight: normal;
   font-style: normal;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+h3 {
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+/* Small uppercase labels get the spaced-caps look from the header */
+h4, label {
+  letter-spacing: 0.08em;
 }
 
 body {
@@ -47,7 +66,7 @@ body {
 }
 
 .navbar .logo h2 {
-  font-size: 1.05rem;
+  font-size: 1.3rem;
   letter-spacing: 0.25em;
   text-transform: uppercase;
 }
@@ -72,10 +91,11 @@ html { scroll-behavior: smooth; }
 
 /* Hero banner: artwork on the left, title + blurb on the right */
 .hero {
-  background-color: var(--bg-color);
-  background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
-  background-size: 18px 18px;
-  border-bottom: 1px solid var(--border-color);
+  /* Fixed light-on-black colors, so it looks the same in light and dark mode */
+  --hero-text: #f1f5f9;
+  --hero-muted: #a3acb9;
+  background-color: #000;
+  color: var(--hero-text);
   padding: 3.5rem 2rem;
 }
 
@@ -97,8 +117,8 @@ html { scroll-behavior: smooth; }
 }
 
 .hero-text h1 {
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 2rem;
+  font-family: var(--font-display);
+  font-size: 2.5rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -107,7 +127,7 @@ html { scroll-behavior: smooth; }
 }
 
 .hero-text p {
-  color: var(--text-muted);
+  color: var(--hero-muted);
   line-height: 1.7;
   max-width: 46ch;
   margin-bottom: 1.5rem;
@@ -116,9 +136,9 @@ html { scroll-behavior: smooth; }
 .hero-btn {
   display: inline-block;
   padding: 0.6rem 1.4rem;
-  border: 1px solid var(--text-main);
+  border: 1px solid var(--hero-text);
   border-radius: 999px;
-  color: var(--text-main);
+  color: var(--hero-text);
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.15em;
@@ -128,8 +148,8 @@ html { scroll-behavior: smooth; }
 }
 
 .hero-btn:hover {
-  background-color: var(--text-main);
-  color: var(--bg-color);
+  background-color: var(--hero-text);
+  color: #000;
 }
 
 @media (max-width: 760px) {
@@ -487,17 +507,17 @@ html[data-font-size="xlarge"] { font-size: 20px; }
    DARK THEME VARIABLES
    ========================================================================== */
 [data-theme="dark"] {
-  --bg-color: #0b1329;            /* Deep Midnight Blue/Black */
-  --surface-color: #17223b;       /* Card Dark Background */
-  --border-color: #273553;
+  --bg-color: #121212;            /* Near-black gray */
+  --surface-color: #1e1e1e;       /* Card dark gray */
+  --border-color: #2f2f2f;
   --text-main: #f1f5f9;           /* Clean Off-white */
-  --text-muted: #94a3b8;
+  --text-muted: #a3a3a3;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme="dark"] input, 
 [data-theme="dark"] select {
-  background-color: #0e1726;
+  background-color: #171717;
   color: #f1f5f9;
   border-color: var(--border-color);
 }
@@ -512,16 +532,16 @@ html[data-font-size="xlarge"] { font-size: 20px; }
 }
 
 [data-theme="dark"] .device-item {
-  background-color: #0e1726;
+  background-color: #171717;
 }
 
 [data-theme="dark"] th {
-  background-color: #131c31;
+  background-color: #191919;
   color: var(--text-muted);
 }
 
 [data-theme="dark"] th.sortable:hover {
-  background-color: #1e2c4c;
+  background-color: #2a2a2a;
   color: var(--text-main);
 }
 
@@ -868,3 +888,31 @@ html[data-font-size="xlarge"] { font-size: 20px; }
   justify-content: center;
   font-size: 0.9rem;
 }
+/* Settings: dashboard graph color pickers */
+.graph-color-pickers {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.graph-color-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.graph-color-option input[type="color"] {
+  width: 36px;
+  height: 36px;
+  padding: 2px;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+
+.graph-color-option input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.graph-color-option input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
+.graph-color-option input[type="color"]::-moz-color-swatch { border: none; border-radius: 50%; }
