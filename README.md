@@ -1,6 +1,6 @@
-# Silver Lining
+# Efficiency V
 
-Silver Lining is a home solar and energy-planning project. Its dashboard estimates
+Efficiency V is a home solar and energy-planning project. Its dashboard estimates
 hourly solar production from a location and solar-panel capacity, applies
 time-of-use electricity rates, and suggests when to run household appliances to
 make better use of solar power and lower-cost electricity. The web dashboard
