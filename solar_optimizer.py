@@ -6,7 +6,7 @@ import urllib.request
 from datetime import datetime
 
 # --- PAGE SETUP ---
-st.set_page_config(page_title="SolarPeak: Dynamic Home Orchestrator", page_icon="⚡", layout="wide")
+st.set_page_config(page_title="SolarPeak: Dynamic Home Orchestrator", layout="wide")
 
 # --- REGIONAL UTILITY TARIFF DEFAULTS ---
 STATE_TARIFF_DEFAULTS = {
@@ -65,7 +65,7 @@ def get_solar_forecast(lat: float, lon: float, panel_kwp: float):
 # ==========================================
 # SIDEBAR: LOCATION & UTILITY CONFIG
 # ==========================================
-st.sidebar.header("📍 1. Home Location")
+st.sidebar.header("1. Home Location")
 zip_input = st.sidebar.text_input("Enter 5-Digit US ZIP Code", value="92618")
 
 loc = lookup_zip(zip_input)
@@ -81,7 +81,7 @@ panel_kwp = st.sidebar.slider("Solar Array Capacity (kWp)", min_value=1.0, max_v
 state_rule = STATE_TARIFF_DEFAULTS.get(loc["state"], STATE_TARIFF_DEFAULTS["DEFAULT"])
 
 st.sidebar.markdown("---")
-st.sidebar.header("💲 2. Electricity Tariff (TOU)")
+st.sidebar.header("2. Electricity Tariff (TOU)")
 with st.sidebar.expander("Review / Customise Utility Rates", expanded=False):
     st.caption(f"Default mapped to: **{state_rule['utility']}**")
     peak_rate = st.number_input("On-Peak Price ($/kWh)", value=state_rule["peak_rate"], step=0.01)
@@ -94,10 +94,10 @@ with st.sidebar.expander("Review / Customise Utility Rates", expanded=False):
 # ==========================================
 # MAIN PAGE: USER DEVICES INPUT
 # ==========================================
-st.title("☀️ SolarPeak: Automated Home Energy Dispatcher")
+st.title("SolarPeak: Automated Home Energy Dispatcher")
 st.markdown(f"Optimizing smart loads for **{loc['city']}, {loc['state']} (ZIP: {zip_input})** using live solar forecasts.")
 
-st.subheader("🔌 Add & Manage Your Home Devices")
+st.subheader("Add & Manage Your Home Devices")
 st.markdown("Modify the table below: adjust device ratings, add new appliances, or toggle them on/off.")
 
 # Default Device Table
@@ -212,7 +212,7 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True)
 
 # Schedule View
-st.subheader("📋 Automated 24-Hour Smart Device Schedule")
+st.subheader("Automated 24-Hour Smart Device Schedule")
 display_table = df_solar[["time_label", "solar_kw", "grid_rate", "rate_tier", "Triggered_Devices"]].rename(columns={
     "time_label": "Time", "solar_kw": "Solar (kW)", "grid_rate": "Tariff ($/kWh)",
     "rate_tier": "Rate Category", "Triggered_Devices": "Automated Smart Home Action"
@@ -220,7 +220,7 @@ display_table = df_solar[["time_label", "solar_kw", "grid_rate", "rate_tier", "T
 st.dataframe(display_table, use_container_width=True, hide_index=True)
 
 # Dispatch Trigger Button
-if st.button("📡 Send Dispatch Commands to Smart Home (Home Assistant / MQTT)"):
+if st.button("Send Dispatch Commands to Smart Home (Home Assistant / MQTT)"):
     now_hour = datetime.now().hour
     current_actions = scheduled_device_map.get(now_hour, [])
     if current_actions:

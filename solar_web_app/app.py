@@ -166,7 +166,7 @@ def brand_logo():
 
 @app.route("/inner-brand-logo")
 def inner_brand_logo():
-    return send_from_directory(os.path.join(app.root_path, "imgs"), "square.jpeg")
+    return send_from_directory(os.path.join(app.root_path, "imgs"), "eclipse.png")
 
 
 

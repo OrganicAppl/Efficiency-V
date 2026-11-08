@@ -95,25 +95,26 @@ html { scroll-behavior: smooth; }
   --hero-text: #f1f5f9;
   --hero-muted: #a3acb9;
   background-color: #000;
+  /* Eclipse photo fills the banner; the gradient keeps the text readable */
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.75) 65%),
+    var(--hero-image);
+  background-size: cover;
+  background-position: left center;
+  background-repeat: no-repeat;
   color: var(--hero-text);
-  padding: 3.5rem 2rem;
+  padding: 6rem 2rem;
 }
 
 .hero-inner {
   max-width: 960px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: 3rem;
-  align-items: center;
+  display: flex;
+  justify-content: flex-end;
 }
 
-.hero-art {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+.hero-text {
+  max-width: 460px;
 }
 
 .hero-text h1 {
@@ -153,13 +154,17 @@ html { scroll-behavior: smooth; }
 }
 
 @media (max-width: 760px) {
-  .hero { padding: 2rem 16px; }
+  .hero {
+    padding: 4rem 16px;
+    background-image:
+      linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+      var(--hero-image);
+    background-position: center;
+  }
   .hero-inner {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+    justify-content: center;
     text-align: center;
   }
-  .hero-art { max-width: 220px; margin: 0 auto; }
   .hero-text p { margin-left: auto; margin-right: auto; }
   .hero-text h1 { font-size: 1.5rem; }
 }
@@ -743,6 +748,7 @@ html[data-font-size="xlarge"] { font-size: 20px; }
   line-height: 1;
 }
 
+.chat-fab .chat-icon { font-size: 0.95rem; font-weight: 600; }
 #chat-container.open .chat-fab .chat-icon { display: none; }
 #chat-container.open .chat-fab .chat-close-icon { display: block; }
 

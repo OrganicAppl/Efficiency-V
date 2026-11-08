@@ -37,7 +37,7 @@ function renderDeviceList() {
         <span>${dev.power_kw} kW • ${dev.duration_hours} hrs (Deadline: ${dev.deadline}:00)</span>
       </div>
       <div class="device-actions-icons">
-        <button class="icon-btn edit" onclick="startEditDevice(${dev.id})" title="Edit Device">✏️</button>
+        <button class="icon-btn edit" onclick="startEditDevice(${dev.id})" title="Edit Device">Edit</button>
         <button class="icon-btn delete" onclick="removeDevice(${dev.id})" title="Delete Device">&times;</button>
       </div>
     `;
@@ -55,7 +55,7 @@ function startEditDevice(id) {
   document.getElementById("dev-hours").value = dev.duration_hours;
   document.getElementById("dev-deadline").value = dev.deadline;
 
-  formHeading.textContent = "✏️ Edit Device";
+  formHeading.textContent = "Edit Device";
   submitDeviceBtn.textContent = "Save Changes";
   cancelEditBtn.style.display = "inline-block";
 }
@@ -63,7 +63,7 @@ function startEditDevice(id) {
 function cancelEdit() {
   editingIdInput.value = "";
   deviceForm.reset();
-  formHeading.textContent = "🔌 Smart Home Devices";
+  formHeading.textContent = "Smart Home Devices";
   submitDeviceBtn.textContent = "+ Add Appliance";
   cancelEditBtn.style.display = "none";
 }
@@ -146,7 +146,7 @@ async function fetchOptimization() {
     console.error(err);
     alert(`Could not load schedule: ${err.message}`);
   } finally {
-    calculateBtn.textContent = "⚡ Optimize Schedule";
+    calculateBtn.textContent = "Optimize Schedule";
     calculateBtn.disabled = false;
   }
 }
