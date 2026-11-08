@@ -364,16 +364,10 @@ function renderChart(hourlyData) {
             padding: 18
           }
         },
+        // One box per series, each in its own line color, drawn by splitTooltip()
         tooltip: {
-          backgroundColor: solarColor,
-          titleColor: "#fff",
-          bodyColor: "#fff",
-          titleFont: { weight: "700", size: 14 },
-          bodyFont: { size: 12 },
-          padding: 12,
-          cornerRadius: 10,
-          caretSize: 6,
-          displayColors: false
+          enabled: false,
+          external: splitTooltip
         }
       },
       scales: {
@@ -400,6 +394,60 @@ function renderChart(hourlyData) {
         }
       }
     }
+  });
+}
+
+// Chart.js draws a single shared tooltip; this replaces it with one box per
+// series, placed next to that series' point and colored to match its line.
+function splitTooltip({ chart, tooltip }) {
+  const wrapper = chart.canvas.parentNode;
+  let boxes = wrapper.querySelectorAll(".chart-tip");
+  if (boxes.length === 0) {
+    chart.data.datasets.forEach(() => {
+      const box = document.createElement("div");
+      box.className = "chart-tip";
+      box.innerHTML = '<div class="chart-tip-title"></div><div class="chart-tip-body"></div>';
+      wrapper.appendChild(box);
+    });
+    boxes = wrapper.querySelectorAll(".chart-tip");
+  }
+
+  if (tooltip.opacity === 0 || !tooltip.dataPoints?.length) {
+    boxes.forEach(b => { b.style.opacity = 0; });
+    return;
+  }
+
+  const currency = getSettings().currency;
+  const placed = [];
+  boxes.forEach(b => { b.style.opacity = 0; });
+
+  // Higher point first, so the lower box is the one nudged down on overlap
+  const points = [...tooltip.dataPoints].sort((a, b) => a.element.y - b.element.y);
+  points.forEach(p => {
+    const box = boxes[p.datasetIndex];
+    const ds = p.dataset;
+    const value = ds.yAxisID === "yRate"
+      ? `${currency}${p.parsed.y.toFixed(2)}/kWh`
+      : `${p.parsed.y.toFixed(2)} kW`;
+    box.style.backgroundColor = ds.borderColor;
+    box.querySelector(".chart-tip-title").textContent = ds.label.replace(/\s*\(.*\)$/, "");
+    box.querySelector(".chart-tip-body").textContent = `${p.label}: ${value}`;
+    box.style.opacity = 1;
+
+    const w = box.offsetWidth;
+    const h = box.offsetHeight;
+    const gap = 12;
+    // Right of the point, or left of it near the right edge
+    let left = p.element.x + gap;
+    if (left + w > wrapper.clientWidth) left = p.element.x - gap - w;
+    let top = p.element.y - h / 2;
+    placed.forEach(prev => {
+      if (top < prev.top + prev.h + 6 && top + h > prev.top - 6) top = prev.top + prev.h + 6;
+    });
+    top = Math.max(0, Math.min(top, wrapper.clientHeight - h));
+    placed.push({ top, h });
+    box.style.left = `${left}px`;
+    box.style.top = `${top}px`;
   });
 }
 

@@ -393,6 +393,22 @@ input[type="range"] {
 .chart-card { height: 420px; }
 .chart-wrapper { position: relative; height: 330px; width: 100%; }
 
+/* Hover tooltips on the chart: one box per series (see splitTooltip in script.js) */
+.chart-tip {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: opacity 0.15s;
+  z-index: 2;
+}
+.chart-tip-title { font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+
 /* Table & Sorting */
 .table-header {
   display: flex;
