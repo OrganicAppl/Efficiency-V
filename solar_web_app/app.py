@@ -164,6 +164,11 @@ app.config.update(
 def brand_logo():
     return send_from_directory(os.path.join(app.root_path, "imgs"), "square.jpeg")
 
+@app.route("/inner-brand-logo")
+def inner_brand_logo():
+    return send_from_directory(os.path.join(app.root_path, "imgs"), "square.jpeg")
+
+
 
 LOGIN_QUERY = """
 SELECT email, hex(password_hash), salt

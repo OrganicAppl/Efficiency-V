@@ -12,25 +12,37 @@
   --text-muted: #64748b;
   --success: #10b981;
   --danger: #ef4444;
-  --radius-lg: 14px;
-  --radius-sm: 8px;
-  --shadow-clean: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.02);
-}
-
-[data-theme="dark"] {
-  --bg-color: #0b1120;            /* Deep obsidian dark */
-  --surface-color: #151e32;
-  --primary-subtle: rgba(245, 158, 11, 0.12);
-  --border-color: #243048;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --shadow-clean: 0 4px 14px rgba(0, 0, 0, 0.35);
+  --radius: 12px;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  /* Display serif for headings (matches the hero), readable serif for body */
+  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-body: "Lora", Georgia, "Times New Roman", serif;
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  font-family: var(--font-body);
+  font-optical-sizing: auto;
+  font-weight: normal;
+  font-style: normal;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+h3 {
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+/* Small uppercase labels get the spaced-caps look from the header */
+h4, label {
+  letter-spacing: 0.08em;
 }
 
 body {
@@ -53,13 +65,119 @@ body {
   backdrop-filter: blur(8px);
 }
 
-.nav-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0.85rem 2rem;
+/* Slim dark top bar, pinned while the page scrolls */
+.navbar {
+  --nav-text: #e2e8f0;
+  --nav-muted: #94a3b8;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 0.5rem 2rem;
+  background-color: #111318;
+  color: var(--nav-text);
+  border-bottom: 1px solid #000;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.navbar .logo h2 {
+  font-size: 1.3rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+
+.navbar .badge {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--nav-text);
+}
+
+.navbar .nav-btn { color: var(--nav-muted); }
+.navbar .nav-btn:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+.navbar .nav-btn.active {
+  color: var(--primary-color);
+  background-color: rgba(245, 158, 11, 0.15);
+}
+
+html { scroll-behavior: smooth; }
+#dashboard { scroll-margin-top: 64px; }
+
+/* Hero banner: artwork on the left, title + blurb on the right */
+.hero {
+  /* Fixed light-on-black colors, so it looks the same in light and dark mode */
+  --hero-text: #f1f5f9;
+  --hero-muted: #a3acb9;
+  background-color: #000;
+  color: var(--hero-text);
+  padding: 3.5rem 2rem;
+}
+
+.hero-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+.hero-art {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.hero-text h1 {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.25;
+  margin-bottom: 1rem;
+}
+
+.hero-text p {
+  color: var(--hero-muted);
+  line-height: 1.7;
+  max-width: 46ch;
+  margin-bottom: 1.5rem;
+}
+
+.hero-btn {
+  display: inline-block;
+  padding: 0.6rem 1.4rem;
+  border: 1px solid var(--hero-text);
+  border-radius: 999px;
+  color: var(--hero-text);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.hero-btn:hover {
+  background-color: var(--hero-text);
+  color: #000;
+}
+
+@media (max-width: 760px) {
+  .hero { padding: 2rem 16px; }
+  .hero-inner {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    text-align: center;
+  }
+  .hero-art { max-width: 220px; margin: 0 auto; }
+  .hero-text p { margin-left: auto; margin-right: auto; }
+  .hero-text h1 { font-size: 1.5rem; }
 }
 
 /* Brand Group */
@@ -195,44 +313,32 @@ body {
   align-items: start; /* CRITICAL: Allows left column to be sticky */
 }
 
-@media (max-width: 960px) {
-  .lachesis-container {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* --- LEFT COLUMN: STOPS SCROLLING ONCE REACHED --- */
-.left-sticky-column {
-  position: sticky;
-  top: 5rem; /* Below the sticky navbar */
-  align-self: start;
-  max-height: calc(100vh - 6rem);
-  overflow-y: auto;
-  padding-right: 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.left-sticky-column::-webkit-scrollbar {
-  width: 4px;
-}
-.left-sticky-column::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
-}
-
-/* --- RIGHT COLUMN: SCROLLS FREELY --- */
-.right-scroll-column {
+.sidebar, .content {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-/* ==========================================================================
-   3. LACHESIS CARDS & CONTROLS
-   ========================================================================== */
-.clean-card {
+/* Left column scrolls with the page until its last item is visible, then
+   stops while the graphs keep scrolling. --sidebar-top is set by
+   sticky-sidebar.js: the header height when the sidebar fits on screen,
+   or a negative offset so it sticks by its bottom edge when it is taller. */
+.sidebar {
+  position: sticky;
+  top: var(--sidebar-top, 88px);
+  align-self: start;
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    position: static;
+  }
+}
+
+.card {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
@@ -568,17 +674,17 @@ html[data-font-size="xlarge"] { font-size: 20px; }
    DARK THEME VARIABLES
    ========================================================================== */
 [data-theme="dark"] {
-  --bg-color: #0b1329;            /* Deep Midnight Blue/Black */
-  --surface-color: #17223b;       /* Card Dark Background */
-  --border-color: #273553;
+  --bg-color: #121212;            /* Near-black gray */
+  --surface-color: #1e1e1e;       /* Card dark gray */
+  --border-color: #2f2f2f;
   --text-main: #f1f5f9;           /* Clean Off-white */
-  --text-muted: #94a3b8;
+  --text-muted: #a3a3a3;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme="dark"] input, 
 [data-theme="dark"] select {
-  background-color: #0e1726;
+  background-color: #171717;
   color: #f1f5f9;
   border-color: var(--border-color);
 }
@@ -593,16 +699,16 @@ html[data-font-size="xlarge"] { font-size: 20px; }
 }
 
 [data-theme="dark"] .device-item {
-  background-color: #0e1726;
+  background-color: #171717;
 }
 
 [data-theme="dark"] th {
-  background-color: #131c31;
+  background-color: #191919;
   color: var(--text-muted);
 }
 
 [data-theme="dark"] th.sortable:hover {
-  background-color: #1e2c4c;
+  background-color: #2a2a2a;
   color: var(--text-main);
 }
 
@@ -870,5 +976,36 @@ html[data-font-size="xlarge"] { font-size: 20px; }
   color: white;
   border: none;
   cursor: pointer;
-  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
 }
+/* Settings: dashboard graph color pickers */
+.graph-color-pickers {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.graph-color-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.graph-color-option input[type="color"] {
+  width: 36px;
+  height: 36px;
+  padding: 2px;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+
+.graph-color-option input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.graph-color-option input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
+.graph-color-option input[type="color"]::-moz-color-swatch { border: none; border-radius: 50%; }

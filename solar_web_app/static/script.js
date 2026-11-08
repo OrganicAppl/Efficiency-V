@@ -291,39 +291,124 @@ function renderChart(hourlyData) {
   const ctx = document.getElementById("solarChart").getContext("2d");
   if (chartInstance) chartInstance.destroy();
 
+  // Match the site's body font in axis labels, legend and tooltips
+  Chart.defaults.font.family = '"Lora", Georgia, serif';
+
+  // User-chosen colors (Settings page) and theme-aware axis/grid colors
+  const settings = getSettings();
+  const solarColor = settings.chartSolarColor;
+  const tariffColor = settings.chartTariffColor;
+  const css = getComputedStyle(document.documentElement);
+  const mutedText = css.getPropertyValue("--text-muted").trim();
+  const gridColor = css.getPropertyValue("--border-color").trim();
+
+  // Soft vertical fade under each curve: strong at the line, clear at the bottom
+  const fadeFill = (hex) => (context) => {
+    const { ctx: c, chartArea } = context.chart;
+    if (!chartArea) return null; // first layout pass, not sized yet
+    const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+    g.addColorStop(0, hexToRgba(hex, 0.45));
+    g.addColorStop(1, hexToRgba(hex, 0));
+    return g;
+  };
+
+  const curve = (hex) => ({
+    type: "line",
+    borderColor: hex,
+    borderWidth: 3,
+    backgroundColor: fadeFill(hex),
+    fill: "origin",
+    cubicInterpolationMode: "monotone", // smooth, without overshooting below 0
+    pointRadius: 0,
+    pointHoverRadius: 7,
+    pointHoverBackgroundColor: "#fff",
+    pointHoverBorderColor: hex,
+    pointHoverBorderWidth: 3
+  });
+
   chartInstance = new Chart(ctx, {
-    type: "bar",
+    type: "line",
     data: {
       labels: hourlyData.map(d => d.time_label),
       datasets: [
         {
+          ...curve(solarColor),
           label: "Solar Power (kW)",
           data: hourlyData.map(d => d.solar_kw),
-          backgroundColor: "#f59e0b",
           yAxisID: "ySolar",
-          borderRadius: 4
+          order: 1 // drawn on top
         },
         {
+          ...curve(tariffColor),
           label: "Tariff ($/kWh)",
           data: hourlyData.map(d => d.grid_rate),
-          type: "line",
-          borderColor: "#ef4444",
-          borderWidth: 2,
-          borderDash: [5, 5],
-          pointRadius: 2,
-          yAxisID: "yRate"
+          yAxisID: "yRate",
+          order: 2
         }
       ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: {
+          position: "top",
+          align: "end",
+          labels: {
+            usePointStyle: true,
+            pointStyle: "circle",
+            boxWidth: 8,
+            boxHeight: 8,
+            color: mutedText,
+            padding: 18
+          }
+        },
+        tooltip: {
+          backgroundColor: solarColor,
+          titleColor: "#fff",
+          bodyColor: "#fff",
+          titleFont: { weight: "700", size: 14 },
+          bodyFont: { size: 12 },
+          padding: 12,
+          cornerRadius: 10,
+          caretSize: 6,
+          displayColors: false
+        }
+      },
       scales: {
-        ySolar: { type: "linear", position: "left", title: { display: true, text: "Estimated Solar (kW)" } },
-        yRate: { type: "linear", position: "right", title: { display: true, text: "Grid Tariff ($/kWh)" }, grid: { drawOnChartArea: false } }
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: { color: mutedText, maxRotation: 0, autoSkipPadding: 16 }
+        },
+        ySolar: {
+          type: "linear",
+          position: "left",
+          beginAtZero: true,
+          border: { display: false, dash: [6, 6] }, // v4: dashed grid lines
+          grid: { color: gridColor, drawTicks: false },
+          ticks: { color: mutedText, padding: 10, callback: v => `${v} kW` }
+        },
+        yRate: {
+          type: "linear",
+          position: "right",
+          beginAtZero: true,
+          border: { display: false },
+          grid: { drawOnChartArea: false, drawTicks: false },
+          ticks: { color: mutedText, padding: 10, callback: v => `${settings.currency}${v.toFixed(2)}` }
+        }
       }
     }
   });
+}
+
+// "#6366f1" -> "rgba(99, 102, 241, alpha)"
+function hexToRgba(hex, alpha) {
+  const h = hex.replace("#", "");
+  const full = h.length === 3 ? h.split("").map(ch => ch + ch).join("") : h;
+  const n = parseInt(full, 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 }
 
 // Live MQTT Trigger Simulation
